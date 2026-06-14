@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docenten Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 246, 0.92);
+      --panel-strong: #fffdf8;
+      --ink: #192126;
+      --muted: #5b6568;
+      --line: rgba(25, 33, 38, 0.08);
+      --accent: #bb4f35;
+      --accent-soft: rgba(187, 79, 53, 0.14);
+      --accent-deep: #713322;
+      --secondary: #0f6b63;
+      --secondary-soft: rgba(15, 107, 99, 0.14);
+      --warning: #c6862b;
+      --warning-soft: rgba(198, 134, 43, 0.16);
+      --shadow: 0 22px 50px rgba(67, 51, 37, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --font-display: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      --font-body: "Avenir Next", "Gill Sans", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(15, 107, 99, 0.18), transparent 22rem),
+        radial-gradient(circle at 0% 100%, rgba(187, 79, 53, 0.14), transparent 28rem),
+        linear-gradient(180deg, #f7f2e9 0%, #f1ebdf 50%, #ece3d5 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(25, 33, 38, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(25, 33, 38, 0.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 70%);
+    }
+
+    .shell {
+      width: min(1380px, calc(100% - 32px));
+      margin: 24px auto 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero,
+    .panel,
+    .view,
+    .period-board {
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-xl);
+      padding: 32px 30px 28px;
+      margin-bottom: 18px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -72px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(187, 79, 53, 0.22), transparent 70%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(187, 79, 53, 0.18);
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      max-width: 760px;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3vw, 3.65rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.55;
+    }
+
+    .hero-meta {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(25, 33, 38, 0.08);
+    }
+
+    .panel {
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-family: var(--font-display);
+      letter-spacing: -0.02em;
+    }
+
+    .panel-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field,
+    .toggle-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label,
+    .toggle-panel span,
+    .checkbox {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    input[type="search"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(25, 33, 38, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(15, 107, 99, 0.55);
+      box-shadow: 0 0 0 4px rgba(15, 107, 99, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .toggle-row,
+    .chip-row,
+    .inline-stats,
+    .tabbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .toggle-row label,
+    .chip,
+    .tabbar button,
+    .checkbox {
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(25, 33, 38, 0.09);
+    }
+
+    .toggle-row label,
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chip,
+    .tabbar button {
+      font: inherit;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 150ms ease, color 150ms ease, transform 150ms ease, border-color 150ms ease;
+    }
+
+    .chip:hover,
+    .tabbar button:hover {
+      transform: translateY(-1px);
+    }
+
+    .chip.active,
+    .tabbar button.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent) 0%, #cf7b35 100%);
+      border-color: transparent;
+    }
+
+    .tabbar {
+      margin: 0 0 18px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 16px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(25, 33, 38, 0.08);
+      box-shadow: 0 14px 28px rgba(67, 51, 37, 0.08);
+    }
+
+    .kpi::after {
+      content: "";
+      position: absolute;
+      inset: auto -10px -26px auto;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 107, 99, 0.16), transparent 70%);
+    }
+
+    .kpi h3,
+    .mini-card h3 {
+      margin: 0 0 8px;
+      font-size: 0.87rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .kpi strong,
+    .mini-card strong {
+      display: block;
+      font-size: 1.9rem;
+      letter-spacing: -0.04em;
+      font-family: var(--font-display);
+      line-height: 1;
+    }
+
+    .kpi p,
+    .mini-card p,
+    .empty-state p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .period-board {
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .period-grid,
+    .view-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .period-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .mini-card {
+      border-radius: var(--radius-md);
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(25, 33, 38, 0.07);
+    }
+
+    .progress {
+      margin-top: 14px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(25, 33, 38, 0.08);
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--secondary) 0%, #51a393 100%);
+    }
+
+    .view {
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fade-up 280ms ease;
+    }
+
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .view-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    details.card {
+      border-radius: var(--radius-lg);
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(25, 33, 38, 0.08);
+    }
+
+    details.card[open] {
+      grid-column: 1 / -1;
+      box-shadow: 0 16px 30px rgba(67, 51, 37, 0.08);
+    }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 18px;
+    }
+
+    .summary-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-title strong {
+      font-size: 1.15rem;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .summary-title span,
+    .summary-meta,
+    .table-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .summary-metric {
+      text-align: right;
+      min-width: 110px;
+    }
+
+    .summary-metric strong {
+      display: block;
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+      font-family: var(--font-display);
+    }
+
+    .summary-body {
+      padding: 0 16px 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(244, 239, 230, 0.72);
+      border: 1px solid rgba(25, 33, 38, 0.06);
+    }
+
+    .section-card h4 {
+      margin: 0 0 12px;
+      font-size: 0.92rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(25, 33, 38, 0.08);
+      font-size: 0.88rem;
+    }
+
+    .tag.alert {
+      background: var(--warning-soft);
+      border-color: rgba(198, 134, 43, 0.28);
+    }
+
+    .tag.ok {
+      background: var(--secondary-soft);
+      border-color: rgba(15, 107, 99, 0.28);
+    }
+
+    .team-line {
+      display: grid;
+      gap: 3px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(25, 33, 38, 0.07);
+    }
+
+    .team-line:first-child {
+      padding-top: 0;
+    }
+
+    .team-line:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .team-line span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(25, 33, 38, 0.08);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+
+    table.compact-table {
+      min-width: 0;
+    }
+
+    table.records-table {
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(25, 33, 38, 0.07);
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8f4ec;
+      font-size: 0.84rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .matrix-table th:first-child,
+    .matrix-table td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #f8f4ec;
+    }
+
+    .matrix-table td:first-child {
+      background: rgba(255, 255, 255, 0.98);
+      z-index: 1;
+      font-weight: 600;
+    }
+
+    .number {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(187, 79, 53, 0.11), rgba(198, 134, 43, 0.11));
+      border: 1px solid rgba(187, 79, 53, 0.14);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      padding: 26px;
+      text-align: center;
+      border-radius: var(--radius-lg);
+      border: 1px dashed rgba(25, 33, 38, 0.16);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .footnote {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1120px) {
+      .filters,
+      .kpis,
+      .period-grid,
+      .view-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 740px) {
+      .shell {
+        width: min(100% - 18px, 1380px);
+        margin: 10px auto 24px;
+      }
+
+      .hero,
+      .panel,
+      .period-board,
+      .view {
+        padding: 18px;
+      }
+
+      .filters,
+      .kpis,
+      .period-grid,
+      .view-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-top,
+      .panel-title {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      table {
+        min-width: 560px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div class="eyebrow">Planningsoverzicht voor docenten en klassen</div>
+      <h1>Wie geeft les aan welke klas, in welke periode, met hoeveel uren.</h1>
+      <p>
+        Dit dashboard is opgebouwd uit het Excelbestand met geplande lessen. Je kunt filteren op klas, docent en vak,
+        en je krijgt zowel een klasoverzicht als een docentoverzicht, inclusief uren en periodes.
+      </p>
+      <div class="hero-meta">
+        <div class="pill" id="source-pill"></div>
+        <div class="pill">Laatst opgebouwd: 2026-06-13T13:29:23</div>
+        <div class="pill" id="integrity-pill"></div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-title">
+        <div>
+          <h2>Filters</h2>
+          <p>Werk vanuit docent, klas of losse vakregels. De weergaven hieronder volgen direct mee.</p>
+        </div>
+        <div class="inline-stats" id="filter-summary"></div>
+      </div>
+
+      <div class="filters">
+        <div class="field">
+          <label for="search">Zoeken</label>
+          <select id="search"></select>
+        </div>
+
+        <div class="field">
+          <label for="class-filter">Klas</label>
+          <select id="class-filter"></select>
+        </div>
+
+        <div class="field">
+          <label for="teacher-filter">Docent</label>
+          <select id="teacher-filter"></select>
+        </div>
+
+        <div class="field">
+          <label for="subject-filter">Vak of onderwijsproduct</label>
+          <select id="subject-filter"></select>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top: 18px;">
+        <div>
+          <h2>Uren en periodes</h2>
+          <p>Gebruik dit om de interpretatie van gezamenlijke docentregels helder te houden.</p>
+        </div>
+      </div>
+
+      <div class="toggle-panel">
+        <span>Uren per docent</span>
+        <div class="toggle-row" id="hours-mode">
+          <label><input type="radio" name="hours-mode" value="linked" checked> Gezamenlijk</label>
+          <label><input type="radio" name="hours-mode" value="distributed"> Gelijk verdeeld</label>
+        </div>
+      </div>
+
+      <div class="toggle-panel" style="margin-top: 14px;">
+        <span>Periodefilter</span>
+        <div class="chip-row" id="period-filter"></div>
+      </div>
+
+      <div class="toggle-row" style="margin-top: 14px;">
+        <label class="checkbox"><input type="checkbox" id="include-unassigned" checked> Toon regels zonder docent</label>
+        <label class="checkbox"><input type="checkbox" id="open-first-card"> Open eerste kaart automatisch</label>
+      </div>
+    </section>
+
+    <section class="kpis" id="kpi-grid"></section>
+
+    <section class="period-board">
+      <div class="panel-title">
+        <div>
+          <h2>Verdeling over periodes</h2>
+          <p>Hier zie je direct waar de meeste geplande uren in de zichtbare selectie liggen.</p>
+        </div>
+      </div>
+      <div class="period-grid" id="period-grid"></div>
+    </section>
+
+    <div class="tabbar" id="tabbar">
+      <button type="button" class="active" data-view="classes">Klassen</button>
+      <button type="button" data-view="teachers">Docenten</button>
+      <button type="button" data-view="matrix">Matrix</button>
+      <button type="button" data-view="records">Detailregels</button>
+    </div>
+
+    <section class="view active" id="view-classes"></section>
+    <section class="view" id="view-teachers"></section>
+    <section class="view" id="view-matrix"></section>
+    <section class="view" id="view-records"></section>
+  </div>
+
+  <script>
+    const DATA = {"meta": {"sourceFile": "Geplande lessen met docenten.xlsx", "sourceSheet": "Blad1", "generatedAt": "2026-06-13T13:29:23", "periodCount": 4, "classCount": 40, "teacherCount": 27, "recordCount": 369, "unassignedRecordCount": 95, "multiTeacherRecordCount": 121, "integrityMismatches": 0, "summaryHours": 21986}, "periods": [{"id": "period-1", "label": "Periode 1", "week": "W35"}, {"id": "period-2", "label": "Periode 2", "week": "W46"}, {"id": "period-3", "label": "Periode 3", "week": "W5"}, {"id": "period-4", "label": "Periode 4", "week": "W16"}], "classes": [{"name": "MI23A-BOL4", "id": "mi23a-bol4", "teacherCount": 6, "teachers": ["AGTH", "DAPT", "DOSU", "GORN", "PESM", "VRFA"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 512, "periodHours": [32, 32, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 382, "periodHours": [5.5, 5.5, 21, 0]}, "grand": {"label": "Totaal", "totalHours": 894, "periodHours": [37.5, 37.5, 21, 0]}}, "computedTotals": {"totalHours": 894, "periodHours": [37.5, 37.5, 21, 0]}, "grandTotalMatchesRows": true}, {"name": "MI24A-BBL3", "id": "mi24a-bbl3", "teacherCount": 6, "teachers": ["BICR", "DOSU", "JADF", "KIHN", "KUHU", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grand": {"label": "Totaal", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}}, "computedTotals": {"totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grandTotalMatchesRows": true}, {"name": "MI24A-BOL3", "id": "mi24a-bol3", "teacherCount": 6, "teachers": ["AGTH", "DAPT", "DOSU", "GORN", "PESM", "VRFA"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 512, "periodHours": [32, 32, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 382, "periodHours": [5.5, 5.5, 21, 0]}, "grand": {"label": "Totaal", "totalHours": 894, "periodHours": [37.5, 37.5, 21, 0]}}, "computedTotals": {"totalHours": 894, "periodHours": [37.5, 37.5, 21, 0]}, "grandTotalMatchesRows": true}, {"name": "MI24A-BOL4", "id": "mi24a-bol4", "teacherCount": 10, "teachers": ["BICR", "DANL", "DOSU", "GINE", "JADF", "KUHU", "SCST", "TAGI", "VRFA", "WIDT"], "recordCount": 17, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 704, "periodHours": [40, 32, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 604, "periodHours": [0, 7, 27, 25]}, "grand": {"label": "Totaal", "totalHours": 1308, "periodHours": [40, 39, 27, 25]}}, "computedTotals": {"totalHours": 1308, "periodHours": [40, 39, 27, 25]}, "grandTotalMatchesRows": true}, {"name": "MI24HT-BBL3", "id": "mi24ht-bbl3", "teacherCount": 5, "teachers": ["DKJE", "DOSU", "JADF", "KIHN", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI24KM-BBL3", "id": "mi24km-bbl3", "teacherCount": 5, "teachers": ["DOSU", "JADF", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI24N-BBL3", "id": "mi24n-bbl3", "teacherCount": 1, "teachers": ["JOTH"], "recordCount": 5, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI24V-BBL3", "id": "mi24v-bbl3", "teacherCount": 5, "teachers": ["BICR", "DOSU", "KIHN", "KUHU", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI24WV-BOL4", "id": "mi24wv-bol4", "teacherCount": 8, "teachers": ["BICR", "DANL", "DOSU", "JADF", "KUHU", "SCST", "TAGI", "VRFA"], "recordCount": 16, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 704, "periodHours": [40, 32, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 604, "periodHours": [0, 7, 27, 25]}, "grand": {"label": "Totaal", "totalHours": 1308, "periodHours": [40, 39, 27, 25]}}, "computedTotals": {"totalHours": 1308, "periodHours": [40, 39, 27, 25]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BBL2", "id": "mi25a-bbl2", "teacherCount": 6, "teachers": ["BICR", "DOSU", "JADF", "KIHN", "KUHU", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grand": {"label": "Totaal", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}}, "computedTotals": {"totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BBL3", "id": "mi25a-bbl3", "teacherCount": 6, "teachers": ["BICR", "DOSU", "JADF", "KIHN", "KUHU", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grand": {"label": "Totaal", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}}, "computedTotals": {"totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BBL4", "id": "mi25a-bbl4", "teacherCount": 1, "teachers": ["DANL"], "recordCount": 4, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BOL2", "id": "mi25a-bol2", "teacherCount": 8, "teachers": ["DKJE", "DOSU", "JADF", "JAHN", "KOAY", "PESM", "VAJY", "ZAJO"], "recordCount": 12, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 40, 0]}, "lesson": {"label": "Totaal les", "totalHours": 720, "periodHours": [26.5, 26.5, 0, 19]}, "grand": {"label": "Totaal", "totalHours": 1120, "periodHours": [26.5, 26.5, 40, 19]}}, "computedTotals": {"totalHours": 1120, "periodHours": [26.5, 26.5, 40, 19]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BOL3", "id": "mi25a-bol3", "teacherCount": 7, "teachers": ["BICR", "DKJE", "GORN", "JADF", "TAGI", "VAJY", "VEGS"], "recordCount": 15, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 40, 0]}, "lesson": {"label": "Totaal les", "totalHours": 765, "periodHours": [25.5, 25.5, 0, 25.5]}, "grand": {"label": "Totaal", "totalHours": 1165, "periodHours": [25.5, 25.5, 40, 25.5]}}, "computedTotals": {"totalHours": 1165, "periodHours": [25.5, 25.5, 40, 25.5]}, "grandTotalMatchesRows": true}, {"name": "MI25A-BOL4", "id": "mi25a-bol4", "teacherCount": 10, "teachers": ["ASYA", "BICR", "CLJH", "DAPT", "KIHN", "KOAY", "KUHU", "SCST", "TAGI", "VRFA"], "recordCount": 13, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 560, "periodHours": [0, 0, 40, 0]}, "lesson": {"label": "Totaal les", "totalHours": 676, "periodHours": [26, 26, 0, 26]}, "grand": {"label": "Totaal", "totalHours": 1236, "periodHours": [26, 26, 40, 26]}}, "computedTotals": {"totalHours": 1236, "periodHours": [26, 26, 40, 26]}, "grandTotalMatchesRows": true}, {"name": "MI25B-BOL4", "id": "mi25b-bol4", "teacherCount": 9, "teachers": ["ASYA", "CLJH", "DAPT", "KIHN", "KOAY", "KUHU", "TAGI", "VRFA", "ZAJO"], "recordCount": 13, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 560, "periodHours": [0, 0, 40, 0]}, "lesson": {"label": "Totaal les", "totalHours": 676, "periodHours": [26, 26, 0, 26]}, "grand": {"label": "Totaal", "totalHours": 1236, "periodHours": [26, 26, 40, 26]}}, "computedTotals": {"totalHours": 1236, "periodHours": [26, 26, 40, 26]}, "grandTotalMatchesRows": true}, {"name": "MI25HT-BBL2", "id": "mi25ht-bbl2", "teacherCount": 5, "teachers": ["DKJE", "DOSU", "JADF", "KIHN", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25HT-BBL3", "id": "mi25ht-bbl3", "teacherCount": 5, "teachers": ["DKJE", "DOSU", "JADF", "KIHN", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25KM-BBL2", "id": "mi25km-bbl2", "teacherCount": 5, "teachers": ["DOSU", "JADF", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25KM-BBL3", "id": "mi25km-bbl3", "teacherCount": 5, "teachers": ["DOSU", "JADF", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25N-BBL2", "id": "mi25n-bbl2", "teacherCount": 1, "teachers": ["JOTH"], "recordCount": 5, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25N-BBL3", "id": "mi25n-bbl3", "teacherCount": 1, "teachers": ["JOTH"], "recordCount": 5, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25V-BBL2", "id": "mi25v-bbl2", "teacherCount": 5, "teachers": ["BICR", "DOSU", "KIHN", "KUHU", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI25V-BBL3", "id": "mi25v-bbl3", "teacherCount": 5, "teachers": ["BICR", "DOSU", "KIHN", "KUHU", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BBL2", "id": "mi26a-bbl2", "teacherCount": 6, "teachers": ["BICR", "DOSU", "JADF", "KIHN", "KUHU", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grand": {"label": "Totaal", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}}, "computedTotals": {"totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BBL3", "id": "mi26a-bbl3", "teacherCount": 6, "teachers": ["BICR", "DOSU", "JADF", "KIHN", "KUHU", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grand": {"label": "Totaal", "totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}}, "computedTotals": {"totalHours": 260, "periodHours": [6.5, 6.5, 6.5, 6.5]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BBL4", "id": "mi26a-bbl4", "teacherCount": 6, "teachers": ["ASYA", "DANL", "GUEV", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BOL2", "id": "mi26a-bol2", "teacherCount": 8, "teachers": ["DOSU", "GINE", "JADF", "JAHN", "KOAY", "PESM", "VAJY", "ZAJO"], "recordCount": 13, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 40, 0]}, "lesson": {"label": "Totaal les", "totalHours": 825, "periodHours": [27.5, 27.5, 0, 27.5]}, "grand": {"label": "Totaal", "totalHours": 1225, "periodHours": [27.5, 27.5, 40, 27.5]}}, "computedTotals": {"totalHours": 1225, "periodHours": [27.5, 27.5, 40, 27.5]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BOL3", "id": "mi26a-bol3", "teacherCount": 10, "teachers": ["DOSU", "GINE", "GORN", "JADF", "KIHN", "RORN", "SCST", "TAGI", "VEGS", "ZAJO"], "recordCount": 16, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 0, 40]}, "lesson": {"label": "Totaal les", "totalHours": 840, "periodHours": [29.5, 29.5, 25, 0]}, "grand": {"label": "Totaal", "totalHours": 1240, "periodHours": [29.5, 29.5, 25, 40]}}, "computedTotals": {"totalHours": 1240, "periodHours": [29.5, 29.5, 25, 40]}, "grandTotalMatchesRows": true}, {"name": "MI26A-BOL4", "id": "mi26a-bol4", "teacherCount": 11, "teachers": ["ASYA", "DOSU", "GINE", "GORN", "JADF", "KIHN", "RORN", "SCST", "TAGI", "VEGS", "ZAJO"], "recordCount": 17, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 0, 40]}, "lesson": {"label": "Totaal les", "totalHours": 870, "periodHours": [30.5, 30.5, 26, 0]}, "grand": {"label": "Totaal", "totalHours": 1270, "periodHours": [30.5, 30.5, 26, 40]}}, "computedTotals": {"totalHours": 1270, "periodHours": [30.5, 30.5, 26, 40]}, "grandTotalMatchesRows": true}, {"name": "MI26B-BOL3", "id": "mi26b-bol3", "teacherCount": 11, "teachers": ["DOSU", "GINE", "GORN", "JADF", "JAHN", "KIHN", "PESM", "RORN", "SCST", "TAGI", "VEGS"], "recordCount": 16, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 0, 40]}, "lesson": {"label": "Totaal les", "totalHours": 840, "periodHours": [29.5, 29.5, 25, 0]}, "grand": {"label": "Totaal", "totalHours": 1240, "periodHours": [29.5, 29.5, 25, 40]}}, "computedTotals": {"totalHours": 1240, "periodHours": [29.5, 29.5, 25, 40]}, "grandTotalMatchesRows": true}, {"name": "MI26B-BOL4", "id": "mi26b-bol4", "teacherCount": 12, "teachers": ["ASYA", "DOSU", "GINE", "GORN", "JADF", "JAHN", "KIHN", "PESM", "RORN", "SCST", "TAGI", "VEGS"], "recordCount": 17, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 400, "periodHours": [0, 0, 0, 40]}, "lesson": {"label": "Totaal les", "totalHours": 870, "periodHours": [30.5, 30.5, 26, 0]}, "grand": {"label": "Totaal", "totalHours": 1270, "periodHours": [30.5, 30.5, 26, 40]}}, "computedTotals": {"totalHours": 1270, "periodHours": [30.5, 30.5, 26, 40]}, "grandTotalMatchesRows": true}, {"name": "MI26HT-BBL2", "id": "mi26ht-bbl2", "teacherCount": 5, "teachers": ["DKJE", "DOSU", "JADF", "KIHN", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26HT-BBL3", "id": "mi26ht-bbl3", "teacherCount": 5, "teachers": ["DKJE", "DOSU", "JADF", "KIHN", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26KM-BBL2", "id": "mi26km-bbl2", "teacherCount": 5, "teachers": ["DOSU", "JADF", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26KM-BBL3", "id": "mi26km-bbl3", "teacherCount": 5, "teachers": ["DOSU", "JADF", "KIHN", "RORN", "VEGS"], "recordCount": 7, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26N-BBL2", "id": "mi26n-bbl2", "teacherCount": 3, "teachers": ["JOTH", "SWES", "VEGS"], "recordCount": 6, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26N-BBL3", "id": "mi26n-bbl3", "teacherCount": 3, "teachers": ["JOTH", "SWES", "VEGS"], "recordCount": 6, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26V-BBL2", "id": "mi26v-bbl2", "teacherCount": 5, "teachers": ["BICR", "DOSU", "KIHN", "KUHU", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}, {"name": "MI26V-BBL3", "id": "mi26v-bbl3", "teacherCount": 5, "teachers": ["BICR", "DOSU", "KIHN", "KUHU", "VEGS"], "recordCount": 8, "totals": {"bpv": {"label": "Totaal BPV", "totalHours": 0, "periodHours": [0, 0, 0, 0]}, "lesson": {"label": "Totaal les", "totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grand": {"label": "Totaal", "totalHours": 240, "periodHours": [6, 6, 6, 6]}}, "computedTotals": {"totalHours": 240, "periodHours": [6, 6, 6, 6]}, "grandTotalMatchesRows": true}], "teachers": [{"code": "AGTH", "id": "agth", "classCount": 2, "subjectCount": 1, "recordCount": 2, "linkedTotalHours": 112, "distributedTotalHours": 37.33, "linkedPeriodHours": [7, 7, 0, 0], "distributedPeriodHours": [2.33, 2.33, 0, 0], "classes": ["MI23A-BOL4", "MI24A-BOL3"], "subjects": ["WD_BOL4_ONT_AFST_2"]}, {"code": "ASYA", "id": "asya", "classCount": 5, "subjectCount": 2, "recordCount": 5, "linkedTotalHours": 132, "distributedTotalHours": 132, "linkedPeriodHours": [4, 4, 3, 3], "distributedPeriodHours": [4, 4, 3, 3], "classes": ["MI25A-BOL4", "MI25B-BOL4", "MI26A-BBL4", "MI26A-BOL4", "MI26B-BOL4"], "subjects": ["WD_BBL_ENG_A2_B1", "WD_BOL4_ENG_A2_B1"]}, {"code": "BICR", "id": "bicr", "classCount": 14, "subjectCount": 7, "recordCount": 35, "linkedTotalHours": 1945, "distributedTotalHours": 964.25, "linkedPeriodHours": [50, 56, 41.5, 52], "distributedPeriodHours": [22.38, 28.38, 22.75, 24.38], "classes": ["MI24A-BBL3", "MI24A-BOL4", "MI24V-BBL3", "MI24WV-BOL4", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL3", "MI25A-BOL4", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BBL_CNC_PROG_BAS_2", "WD_BBL_LB_2", "WD_BOL4_MEUBEL_INTER_1_1", "WD_BOL4_PRK_2", "WD_BOL4_RUIM_CON", "WD_MIBBL_DIG_VAAR_3", "WD_MIBBL_VKL_2"]}, {"code": "CLJH", "id": "cljh", "classCount": 2, "subjectCount": 1, "recordCount": 2, "linkedTotalHours": 104, "distributedTotalHours": 104, "linkedPeriodHours": [4, 4, 0, 4], "distributedPeriodHours": [4, 4, 0, 4], "classes": ["MI25A-BOL4", "MI25B-BOL4"], "subjects": ["WD_BOL4_BEDR"]}, {"code": "DANL", "id": "danl", "classCount": 4, "subjectCount": 6, "recordCount": 9, "linkedTotalHours": 541, "distributedTotalHours": 447.5, "linkedPeriodHours": [9, 13, 15, 15], "distributedPeriodHours": [7.5, 9.5, 13, 13], "classes": ["MI24A-BOL4", "MI24WV-BOL4", "MI25A-BBL4", "MI26A-BBL4"], "subjects": ["WD_BBL_LB_BURG", "WD_BBL_VAK_GEV", "WD_BOL4_LB", "WD_BOL4_ONT_VRIJ_WERK", "WD_BOL4_PRK_VB_VRIJ_WERK_2", "WD_BOL4_WERKVOOR"]}, {"code": "DAPT", "id": "dapt", "classCount": 4, "subjectCount": 6, "recordCount": 11, "linkedTotalHours": 1015, "distributedTotalHours": 404.33, "linkedPeriodHours": [39.5, 39.5, 7, 28.5], "distributedPeriodHours": [15.33, 15.33, 3.5, 11], "classes": ["MI23A-BOL4", "MI24A-BOL3", "MI25A-BOL4", "MI25B-BOL4"], "subjects": ["WD_BOL4_BEG_AFST_ONDER_MEUB", "WD_BOL4_LB", "WD_BOL4_ONT_AFST_2", "WD_BOL4_PALET_CAD_2", "WD_BOL4_PRK_2", "WD_BOL4_WERKVOOR"]}, {"code": "DKJE", "id": "dkje", "classCount": 7, "subjectCount": 7, "recordCount": 19, "linkedTotalHours": 1080, "distributedTotalHours": 900, "linkedPeriodHours": [31, 31, 15, 31], "distributedPeriodHours": [25, 25, 15, 25], "classes": ["MI24HT-BBL3", "MI25A-BOL2", "MI25A-BOL3", "MI25HT-BBL2", "MI25HT-BBL3", "MI26HT-BBL2", "MI26HT-BBL3"], "subjects": ["WD_BBL_CNC_PROG_BAS_2", "WD_BBL_HOUT_TECH", "WD_BBL_LB_BURG", "WD_BOL2_CNC_PRK", "WD_BOL4_CNC_1", "WD_BOL4_CNC_PRK", "WD_BOL4_PRK_2"]}, {"code": "DOSU", "id": "dosu", "classCount": 30, "subjectCount": 10, "recordCount": 41, "linkedTotalHours": 1493, "distributedTotalHours": 958.83, "linkedPeriodHours": [44, 46, 27, 29.5], "distributedPeriodHours": [27.67, 29.67, 19.5, 16.25], "classes": ["MI23A-BOL4", "MI24A-BBL3", "MI24A-BOL3", "MI24A-BOL4", "MI24HT-BBL3", "MI24KM-BBL3", "MI24V-BBL3", "MI24WV-BOL4", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL2", "MI25HT-BBL2", "MI25HT-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26A-BOL2", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26HT-BBL2", "MI26HT-BBL3", "MI26KM-BBL2", "MI26KM-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BBL_AUTO_CAD_3", "WD_BBL_DIG_VAAR_BAS_2", "WD_BOL2_AUTOCAD", "WD_BOL2_NED_1", "WD_BOL2_REK_1", "WD_BOL2_VKL_1", "WD_BOL4_BPV_VERS_ZELF", "WD_BOL4_DIG_VAAR", "WD_BOL4_EXPO", "WD_MIBBL_DIG_VAAR_3"]}, {"code": "GINE", "id": "gine", "classCount": 6, "subjectCount": 6, "recordCount": 14, "linkedTotalHours": 1580, "distributedTotalHours": 852.5, "linkedPeriodHours": [54, 54, 47, 3], "distributedPeriodHours": [29.75, 29.75, 23.25, 2.5], "classes": ["MI24A-BOL4", "MI26A-BOL2", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL2_DIG_VAAR", "WD_BOL4_LB", "WD_BOL4_LEID", "WD_BOL4_MEUBEL_INTER_1_1", "WD_BOL4_MEUBEL_INTER_WORK_2", "WD_BOL4_PRK_2"]}, {"code": "GORN", "id": "gorn", "classCount": 7, "subjectCount": 3, "recordCount": 11, "linkedTotalHours": 2292, "distributedTotalHours": 939.5, "linkedPeriodHours": [68, 68, 70, 12], "distributedPeriodHours": [29.45, 29.45, 23.45, 6], "classes": ["MI23A-BOL4", "MI24A-BOL3", "MI25A-BOL3", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL4_MACH_KEN_VEIL", "WD_BOL4_PRK_1", "WD_BOL4_PRK_2"]}, {"code": "GUEV", "id": "guev", "classCount": 1, "subjectCount": 1, "recordCount": 1, "linkedTotalHours": 40, "distributedTotalHours": 40, "linkedPeriodHours": [1, 1, 1, 1], "distributedPeriodHours": [1, 1, 1, 1], "classes": ["MI26A-BBL4"], "subjects": ["WD_BBL_BEDR"]}, {"code": "JADF", "id": "jadf", "classCount": 24, "subjectCount": 8, "recordCount": 30, "linkedTotalHours": 970, "distributedTotalHours": 777.5, "linkedPeriodHours": [23.5, 23.5, 27, 23], "distributedPeriodHours": [19, 19, 22.5, 17.25], "classes": ["MI24A-BBL3", "MI24A-BOL4", "MI24HT-BBL3", "MI24KM-BBL3", "MI24WV-BOL4", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL2", "MI25A-BOL3", "MI25HT-BBL2", "MI25HT-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26A-BOL2", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26HT-BBL2", "MI26HT-BBL3", "MI26KM-BBL2", "MI26KM-BBL3"], "subjects": ["WD_BBL_AUTO_CAD_2", "WD_BBL_AUTO_CAD_3", "WD_BOL2_AUTOCAD", "WD_BOL2_DIG_VAAR", "WD_BOL4_AUTO_1", "WD_BOL4_AUTO_2", "WD_BOL4_PALET_CAD_1", "WD_BOL4_PALET_CAD_2"]}, {"code": "JAHN", "id": "jahn", "classCount": 4, "subjectCount": 5, "recordCount": 8, "linkedTotalHours": 1810, "distributedTotalHours": 544.33, "linkedPeriodHours": [61, 61, 21, 38], "distributedPeriodHours": [18.37, 18.37, 4.2, 13.5], "classes": ["MI25A-BOL2", "MI26A-BOL2", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL2_LB_1", "WD_BOL2_LB_2", "WD_BOL2_PRK2", "WD_BOL2_VKL_1", "WD_BOL4_PRK_2"]}, {"code": "JOTH", "id": "joth", "classCount": 5, "subjectCount": 3, "recordCount": 15, "linkedTotalHours": 1080, "distributedTotalHours": 1080, "linkedPeriodHours": [30, 26, 26, 26], "distributedPeriodHours": [30, 26, 26, 26], "classes": ["MI24N-BBL3", "MI25N-BBL2", "MI25N-BBL3", "MI26N-BBL2", "MI26N-BBL3"], "subjects": ["WD_BBL_LB_BURG", "WD_MIBBL_KEUZE", "WD_MIBBL_VKL_1"]}, {"code": "KIHN", "id": "kihn", "classCount": 27, "subjectCount": 4, "recordCount": 30, "linkedTotalHours": 1070, "distributedTotalHours": 660, "linkedPeriodHours": [30, 30, 24, 25], "distributedPeriodHours": [19.5, 19.5, 14, 15], "classes": ["MI24A-BBL3", "MI24HT-BBL3", "MI24KM-BBL3", "MI24V-BBL3", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL4", "MI25B-BOL4", "MI25HT-BBL2", "MI25HT-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26A-BBL4", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26HT-BBL2", "MI26HT-BBL3", "MI26KM-BBL2", "MI26KM-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BBL_BREN_2", "WD_BOL4_BURG_DEEL1", "WD_BOL4_LB", "WD_BOL4_NED_3F"]}, {"code": "KOAY", "id": "koay", "classCount": 4, "subjectCount": 5, "recordCount": 8, "linkedTotalHours": 1284, "distributedTotalHours": 470.33, "linkedPeriodHours": [44, 44, 0, 42], "distributedPeriodHours": [16.17, 16.17, 0, 15.5], "classes": ["MI25A-BOL2", "MI25A-BOL4", "MI25B-BOL4", "MI26A-BOL2"], "subjects": ["WD_BOL2_LB_2", "WD_BOL2_LB_PRK_1", "WD_BOL2_PRK2", "WD_BOL2_VKL_1", "WD_BOL4_CNC_2"]}, {"code": "KUHU", "id": "kuhu", "classCount": 14, "subjectCount": 11, "recordCount": 53, "linkedTotalHours": 2871, "distributedTotalHours": 1362.42, "linkedPeriodHours": [62, 66, 67.5, 96], "distributedPeriodHours": [28.38, 30.38, 35.08, 43.21], "classes": ["MI24A-BBL3", "MI24A-BOL4", "MI24V-BBL3", "MI24WV-BOL4", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL4", "MI25B-BOL4", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BBL_AUTO_CAD_3", "WD_BBL_CNC_PROG_BAS_2", "WD_BBL_LB_2", "WD_BOL4_CNC_2", "WD_BOL4_LB", "WD_BOL4_ONT_EXT_PROJ", "WD_BOL4_PRK_2", "WD_BOL4_PRK_EXT_PROJ_2", "WD_BOL4_PRK_VB_EXTERN_PROJ_2", "WD_MIBBL_DIG_VAAR_3", "WD_MIBBL_VKL_2"]}, {"code": "PESM", "id": "pesm", "classCount": 6, "subjectCount": 5, "recordCount": 12, "linkedTotalHours": 1014, "distributedTotalHours": 324.33, "linkedPeriodHours": [36, 36, 30, 1], "distributedPeriodHours": [11.53, 11.53, 8.7, 1], "classes": ["MI23A-BOL4", "MI24A-BOL3", "MI25A-BOL2", "MI26A-BOL2", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL2_ONTW", "WD_BOL4_BEG_AFST_ONDER_MEUB", "WD_BOL4_LB", "WD_BOL4_ONT_AFST_2", "WD_BOL4_PRK_2"]}, {"code": "RORN", "id": "rorn", "classCount": 10, "subjectCount": 7, "recordCount": 24, "linkedTotalHours": 2150, "distributedTotalHours": 1346, "linkedPeriodHours": [61, 61, 69, 24], "distributedPeriodHours": [34.7, 34.7, 42.7, 22.5], "classes": ["MI24KM-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI26A-BBL4", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26KM-BBL2", "MI26KM-BBL3"], "subjects": ["WD_BBL_KEUKEN_TECH", "WD_BBL_LB_BURG", "WD_BBL_VAK_GEV", "WD_BOL4_CNC_2", "WD_BOL4_LB", "WD_BOL4_MEUBEL_INTER_WORK_2", "WD_BOL4_PRK_2"]}, {"code": "SCST", "id": "scst", "classCount": 7, "subjectCount": 5, "recordCount": 13, "linkedTotalHours": 2143, "distributedTotalHours": 598.42, "linkedPeriodHours": [52.5, 56.5, 67, 42.5], "distributedPeriodHours": [12.07, 14.07, 20.78, 13.96], "classes": ["MI24A-BOL4", "MI24WV-BOL4", "MI25A-BOL4", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL4_PALET_CAD_2", "WD_BOL4_PRK_2", "WD_BOL4_PRK_EXT_PROJ_2", "WD_BOL4_PRK_PROJ_VRIJ_WERK_2", "WD_BOL4_PRK_VB_VRIJ_WERK_2"]}, {"code": "SWES", "id": "swes", "classCount": 2, "subjectCount": 1, "recordCount": 2, "linkedTotalHours": 120, "distributedTotalHours": 60, "linkedPeriodHours": [0, 4, 4, 4], "distributedPeriodHours": [0, 2, 2, 2], "classes": ["MI26N-BBL2", "MI26N-BBL3"], "subjects": ["WD_BBL_NED_REK_1"]}, {"code": "TAGI", "id": "tagi", "classCount": 9, "subjectCount": 6, "recordCount": 16, "linkedTotalHours": 682, "distributedTotalHours": 555.5, "linkedPeriodHours": [22, 24, 11, 16], "distributedPeriodHours": [19.25, 19.25, 7.5, 13.25], "classes": ["MI24A-BOL4", "MI24WV-BOL4", "MI25A-BOL3", "MI25A-BOL4", "MI25B-BOL4", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4"], "subjects": ["WD_BOL4_LB", "WD_BOL4_MEUBEL_INTER_1_1", "WD_BOL4_ONT_1", "WD_BOL4_ONT_EXT_PROJ", "WD_BOL4_PRK_VB_EXTERN_PROJ_2", "WD_BOL4_WERKVOOR"]}, {"code": "VAJY", "id": "vajy", "classCount": 3, "subjectCount": 4, "recordCount": 7, "linkedTotalHours": 180, "distributedTotalHours": 130, "linkedPeriodHours": [7, 7, 0, 4], "distributedPeriodHours": [5, 5, 0, 3], "classes": ["MI25A-BOL2", "MI25A-BOL3", "MI26A-BOL2"], "subjects": ["WD_BOL2_BURG", "WD_BOL2_NED_1", "WD_BOL2_REK_1", "WD_BOL4_NED_3F"]}, {"code": "VEGS", "id": "vegs", "classCount": 28, "subjectCount": 5, "recordCount": 35, "linkedTotalHours": 1300, "distributedTotalHours": 800, "linkedPeriodHours": [33, 37, 34, 26], "distributedPeriodHours": [21.5, 23.5, 21, 14], "classes": ["MI24A-BBL3", "MI24HT-BBL3", "MI24KM-BBL3", "MI24V-BBL3", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BOL3", "MI25HT-BBL2", "MI25HT-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26A-BBL4", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26HT-BBL2", "MI26HT-BBL3", "MI26KM-BBL2", "MI26KM-BBL3", "MI26N-BBL2", "MI26N-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BBL_BREN_2", "WD_BBL_NED_REK_1", "WD_BOL4_BURG_DEEL1", "WD_BOL4_LB", "WD_BOL4_REK_3F"]}, {"code": "VRFA", "id": "vrfa", "classCount": 6, "subjectCount": 4, "recordCount": 8, "linkedTotalHours": 1428, "distributedTotalHours": 519.17, "linkedPeriodHours": [21, 21, 49, 49], "distributedPeriodHours": [5.25, 5.25, 23.33, 14.58], "classes": ["MI23A-BOL4", "MI24A-BOL3", "MI24A-BOL4", "MI24WV-BOL4", "MI25A-BOL4", "MI25B-BOL4"], "subjects": ["WD_BOL4_PRK_1", "WD_BOL4_PRK_2", "WD_BOL4_PRK_EXT_PROJ_2", "WD_BOL4_PRK_PROJ_VRIJ_WERK_2"]}, {"code": "WIDT", "id": "widt", "classCount": 1, "subjectCount": 1, "recordCount": 1, "linkedTotalHours": 60, "distributedTotalHours": 60, "linkedPeriodHours": [0, 0, 3, 3], "distributedPeriodHours": [0, 0, 3, 3], "classes": ["MI24A-BOL4"], "subjects": ["WD_BOL4_BEDR"]}, {"code": "ZAJO", "id": "zajo", "classCount": 5, "subjectCount": 2, "recordCount": 5, "linkedTotalHours": 1803, "distributedTotalHours": 525.75, "linkedPeriodHours": [61.5, 61.5, 21, 40.5], "distributedPeriodHours": [17.88, 17.88, 5.25, 12.62], "classes": ["MI25A-BOL2", "MI25B-BOL4", "MI26A-BOL2", "MI26A-BOL3", "MI26A-BOL4"], "subjects": ["WD_BOL2_PRK2", "WD_BOL4_PRK_2"]}], "unassignedTeacher": {"code": "__UNASSIGNED__", "id": "nog-niet-toegewezen", "label": "Nog niet toegewezen", "classCount": 40, "subjectCount": 4, "recordCount": 95, "linkedTotalHours": 6392, "distributedTotalHours": 6392, "linkedPeriodHours": [144, 128, 202, 162], "distributedPeriodHours": [144, 128, 202, 162], "classes": ["MI23A-BOL4", "MI24A-BBL3", "MI24A-BOL3", "MI24A-BOL4", "MI24HT-BBL3", "MI24KM-BBL3", "MI24N-BBL3", "MI24V-BBL3", "MI24WV-BOL4", "MI25A-BBL2", "MI25A-BBL3", "MI25A-BBL4", "MI25A-BOL2", "MI25A-BOL3", "MI25A-BOL4", "MI25B-BOL4", "MI25HT-BBL2", "MI25HT-BBL3", "MI25KM-BBL2", "MI25KM-BBL3", "MI25N-BBL2", "MI25N-BBL3", "MI25V-BBL2", "MI25V-BBL3", "MI26A-BBL2", "MI26A-BBL3", "MI26A-BBL4", "MI26A-BOL2", "MI26A-BOL3", "MI26A-BOL4", "MI26B-BOL3", "MI26B-BOL4", "MI26HT-BBL2", "MI26HT-BBL3", "MI26KM-BBL2", "MI26KM-BBL3", "MI26N-BBL2", "MI26N-BBL3", "MI26V-BBL2", "MI26V-BBL3"], "subjects": ["WD_BOL2_BPV", "WD_BOL4_BPV", "WD_BOL4_CRAFTED", "geplande uitval"]}, "records": [{"id": "r-4", "rowNumber": 4, "className": "MI23A-BOL4", "subject": "WD_BOL4_PRK_1", "teachers": ["GORN", "VRFA"], "teacherCount": 2, "totalHours": 196, "periodHours": [0, 0, 14, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-5", "rowNumber": 5, "className": "MI23A-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 512, "periodHours": [32, 32, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-6", "rowNumber": 6, "className": "MI23A-BOL4", "subject": "WD_BOL4_LB", "teachers": ["DAPT", "PESM"], "teacherCount": 2, "totalHours": 32, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-7", "rowNumber": 7, "className": "MI23A-BOL4", "subject": "WD_BOL4_EXPO", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 49, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-8", "rowNumber": 8, "className": "MI23A-BOL4", "subject": "WD_BOL4_BEG_AFST_ONDER_MEUB", "teachers": ["DAPT", "PESM"], "teacherCount": 2, "totalHours": 49, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-9", "rowNumber": 9, "className": "MI23A-BOL4", "subject": "WD_BOL4_ONT_AFST_2", "teachers": ["AGTH", "DAPT", "PESM"], "teacherCount": 3, "totalHours": 56, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-10", "rowNumber": 10, "className": "MI23A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-11", "rowNumber": 11, "className": "MI23A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-16", "rowNumber": 16, "className": "MI24A-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-17", "rowNumber": 17, "className": "MI24A-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-18", "rowNumber": 18, "className": "MI24A-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 80, "periodHours": [2, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-19", "rowNumber": 19, "className": "MI24A-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["JADF", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-20", "rowNumber": 20, "className": "MI24A-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["BICR", "DOSU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-21", "rowNumber": 21, "className": "MI24A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-22", "rowNumber": 22, "className": "MI24A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-27", "rowNumber": 27, "className": "MI24A-BOL3", "subject": "WD_BOL4_PRK_1", "teachers": ["GORN", "VRFA"], "teacherCount": 2, "totalHours": 196, "periodHours": [0, 0, 14, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-28", "rowNumber": 28, "className": "MI24A-BOL3", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 512, "periodHours": [32, 32, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-29", "rowNumber": 29, "className": "MI24A-BOL3", "subject": "WD_BOL4_LB", "teachers": ["DAPT", "PESM"], "teacherCount": 2, "totalHours": 32, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-30", "rowNumber": 30, "className": "MI24A-BOL3", "subject": "WD_BOL4_EXPO", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 49, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-31", "rowNumber": 31, "className": "MI24A-BOL3", "subject": "WD_BOL4_BEG_AFST_ONDER_MEUB", "teachers": ["DAPT", "PESM"], "teacherCount": 2, "totalHours": 49, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-32", "rowNumber": 32, "className": "MI24A-BOL3", "subject": "WD_BOL4_ONT_AFST_2", "teachers": ["AGTH", "DAPT", "PESM"], "teacherCount": 3, "totalHours": 56, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-33", "rowNumber": 33, "className": "MI24A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-34", "rowNumber": 34, "className": "MI24A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-39", "rowNumber": 39, "className": "MI24A-BOL4", "subject": "WD_BOL4_PRK_VB_VRIJ_WERK_2", "teachers": ["DANL", "SCST"], "teacherCount": 2, "totalHours": 20, "periodHours": [0, 2, 0, 0], "activePeriodIds": ["period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-40", "rowNumber": 40, "className": "MI24A-BOL4", "subject": "WD_BOL4_ONT_VRIJ_WERK", "teachers": ["DANL"], "teacherCount": 1, "totalHours": 7, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-41", "rowNumber": 41, "className": "MI24A-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["KUHU"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 0, 2, 2], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-42", "rowNumber": 42, "className": "MI24A-BOL4", "subject": "WD_BOL4_CRAFTED", "teachers": [], "teacherCount": 0, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": false}, {"id": "r-43", "rowNumber": 43, "className": "MI24A-BOL4", "subject": "WD_BOL4_LB", "teachers": ["KUHU"], "teacherCount": 1, "totalHours": 27, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-44", "rowNumber": 44, "className": "MI24A-BOL4", "subject": "WD_BOL4_LEID", "teachers": ["GINE"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 0, 2, 2], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-45", "rowNumber": 45, "className": "MI24A-BOL4", "subject": "WD_BOL4_BEDR", "teachers": ["WIDT"], "teacherCount": 1, "totalHours": 60, "periodHours": [0, 0, 3, 3], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-46", "rowNumber": 46, "className": "MI24A-BOL4", "subject": "WD_BOL4_RUIM_CON", "teachers": ["BICR"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 2, 2, 0], "activePeriodIds": ["period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-47", "rowNumber": 47, "className": "MI24A-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF", "SCST"], "teacherCount": 2, "totalHours": 40, "periodHours": [0, 0, 2, 2], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-48", "rowNumber": 48, "className": "MI24A-BOL4", "subject": "WD_BOL4_BPV_VERS_ZELF", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 10, "periodHours": [0, 1, 0, 0], "activePeriodIds": ["period-2"], "isBpv": true, "isUitval": false, "hasTeacher": true}, {"id": "r-49", "rowNumber": 49, "className": "MI24A-BOL4", "subject": "WD_BOL4_PRK_EXT_PROJ_2", "teachers": ["KUHU", "SCST", "VRFA"], "teacherCount": 3, "totalHours": 175, "periodHours": [0, 0, 3.5, 14], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-50", "rowNumber": 50, "className": "MI24A-BOL4", "subject": "WD_BOL4_PRK_VB_EXTERN_PROJ_2", "teachers": ["KUHU", "TAGI"], "teacherCount": 2, "totalHours": 35, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-51", "rowNumber": 51, "className": "MI24A-BOL4", "subject": "WD_BOL4_ONT_EXT_PROJ", "teachers": ["KUHU", "TAGI"], "teacherCount": 2, "totalHours": 20, "periodHours": [0, 2, 0, 0], "activePeriodIds": ["period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-52", "rowNumber": 52, "className": "MI24A-BOL4", "subject": "WD_BOL4_PRK_PROJ_VRIJ_WERK_2", "teachers": ["SCST", "VRFA"], "teacherCount": 2, "totalHours": 70, "periodHours": [0, 0, 7, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-53", "rowNumber": 53, "className": "MI24A-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 704, "periodHours": [40, 32, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-54", "rowNumber": 54, "className": "MI24A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-55", "rowNumber": 55, "className": "MI24A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-60", "rowNumber": 60, "className": "MI24HT-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-61", "rowNumber": 61, "className": "MI24HT-BBL3", "subject": "WD_BBL_HOUT_TECH", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 60, "periodHours": [2, 2, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-62", "rowNumber": 62, "className": "MI24HT-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-63", "rowNumber": 63, "className": "MI24HT-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-64", "rowNumber": 64, "className": "MI24HT-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-65", "rowNumber": 65, "className": "MI24HT-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-66", "rowNumber": 66, "className": "MI24HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-67", "rowNumber": 67, "className": "MI24HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-72", "rowNumber": 72, "className": "MI24KM-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-73", "rowNumber": 73, "className": "MI24KM-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-74", "rowNumber": 74, "className": "MI24KM-BBL3", "subject": "WD_BBL_KEUKEN_TECH", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-75", "rowNumber": 75, "className": "MI24KM-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-76", "rowNumber": 76, "className": "MI24KM-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-77", "rowNumber": 77, "className": "MI24KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-78", "rowNumber": 78, "className": "MI24KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-83", "rowNumber": 83, "className": "MI24N-BBL3", "subject": "WD_MIBBL_VKL_1", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-84", "rowNumber": 84, "className": "MI24N-BBL3", "subject": "WD_MIBBL_KEUZE", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-85", "rowNumber": 85, "className": "MI24N-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-86", "rowNumber": 86, "className": "MI24N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-87", "rowNumber": 87, "className": "MI24N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-92", "rowNumber": 92, "className": "MI24V-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-93", "rowNumber": 93, "className": "MI24V-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-94", "rowNumber": 94, "className": "MI24V-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-95", "rowNumber": 95, "className": "MI24V-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-96", "rowNumber": 96, "className": "MI24V-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-97", "rowNumber": 97, "className": "MI24V-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-98", "rowNumber": 98, "className": "MI24V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-99", "rowNumber": 99, "className": "MI24V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-104", "rowNumber": 104, "className": "MI24WV-BOL4", "subject": "WD_BOL4_PRK_VB_VRIJ_WERK_2", "teachers": ["DANL", "SCST"], "teacherCount": 2, "totalHours": 20, "periodHours": [0, 2, 0, 0], "activePeriodIds": ["period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-105", "rowNumber": 105, "className": "MI24WV-BOL4", "subject": "WD_BOL4_WERKVOOR", "teachers": ["DANL"], "teacherCount": 1, "totalHours": 100, "periodHours": [0, 0, 5, 5], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-106", "rowNumber": 106, "className": "MI24WV-BOL4", "subject": "WD_BOL4_LB", "teachers": ["DANL", "KUHU"], "teacherCount": 2, "totalHours": 27, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-107", "rowNumber": 107, "className": "MI24WV-BOL4", "subject": "WD_BOL4_ONT_VRIJ_WERK", "teachers": ["DANL"], "teacherCount": 1, "totalHours": 7, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-108", "rowNumber": 108, "className": "MI24WV-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["KUHU"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 0, 2, 2], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-109", "rowNumber": 109, "className": "MI24WV-BOL4", "subject": "WD_BOL4_CRAFTED", "teachers": [], "teacherCount": 0, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": false}, {"id": "r-110", "rowNumber": 110, "className": "MI24WV-BOL4", "subject": "WD_BOL4_RUIM_CON", "teachers": ["BICR"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 2, 2, 0], "activePeriodIds": ["period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-111", "rowNumber": 111, "className": "MI24WV-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF", "SCST"], "teacherCount": 2, "totalHours": 40, "periodHours": [0, 0, 2, 2], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-112", "rowNumber": 112, "className": "MI24WV-BOL4", "subject": "WD_BOL4_BPV_VERS_ZELF", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 10, "periodHours": [0, 1, 0, 0], "activePeriodIds": ["period-2"], "isBpv": true, "isUitval": false, "hasTeacher": true}, {"id": "r-113", "rowNumber": 113, "className": "MI24WV-BOL4", "subject": "WD_BOL4_PRK_EXT_PROJ_2", "teachers": ["KUHU", "SCST", "VRFA"], "teacherCount": 3, "totalHours": 175, "periodHours": [0, 0, 3.5, 14], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-114", "rowNumber": 114, "className": "MI24WV-BOL4", "subject": "WD_BOL4_PRK_VB_EXTERN_PROJ_2", "teachers": ["KUHU", "TAGI"], "teacherCount": 2, "totalHours": 35, "periodHours": [0, 0, 3.5, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-115", "rowNumber": 115, "className": "MI24WV-BOL4", "subject": "WD_BOL4_ONT_EXT_PROJ", "teachers": ["KUHU", "TAGI"], "teacherCount": 2, "totalHours": 20, "periodHours": [0, 2, 0, 0], "activePeriodIds": ["period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-116", "rowNumber": 116, "className": "MI24WV-BOL4", "subject": "WD_BOL4_PRK_PROJ_VRIJ_WERK_2", "teachers": ["SCST", "VRFA"], "teacherCount": 2, "totalHours": 70, "periodHours": [0, 0, 7, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-117", "rowNumber": 117, "className": "MI24WV-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 704, "periodHours": [40, 32, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-118", "rowNumber": 118, "className": "MI24WV-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-119", "rowNumber": 119, "className": "MI24WV-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-124", "rowNumber": 124, "className": "MI25A-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-125", "rowNumber": 125, "className": "MI25A-BBL2", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-126", "rowNumber": 126, "className": "MI25A-BBL2", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 80, "periodHours": [2, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-127", "rowNumber": 127, "className": "MI25A-BBL2", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["JADF", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-128", "rowNumber": 128, "className": "MI25A-BBL2", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["BICR", "DOSU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-129", "rowNumber": 129, "className": "MI25A-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-130", "rowNumber": 130, "className": "MI25A-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-135", "rowNumber": 135, "className": "MI25A-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-136", "rowNumber": 136, "className": "MI25A-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-137", "rowNumber": 137, "className": "MI25A-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 80, "periodHours": [2, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-138", "rowNumber": 138, "className": "MI25A-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["JADF", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-139", "rowNumber": 139, "className": "MI25A-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["BICR", "DOSU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-140", "rowNumber": 140, "className": "MI25A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-141", "rowNumber": 141, "className": "MI25A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-146", "rowNumber": 146, "className": "MI25A-BBL4", "subject": "WD_BBL_VAK_GEV", "teachers": ["DANL"], "teacherCount": 1, "totalHours": 200, "periodHours": [5, 5, 5, 5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-147", "rowNumber": 147, "className": "MI25A-BBL4", "subject": "WD_BBL_LB_BURG", "teachers": ["DANL"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-148", "rowNumber": 148, "className": "MI25A-BBL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-149", "rowNumber": 149, "className": "MI25A-BBL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-154", "rowNumber": 154, "className": "MI25A-BOL2", "subject": "WD_BOL2_VKL_1", "teachers": ["DOSU", "JAHN", "KOAY"], "teacherCount": 3, "totalHours": 100, "periodHours": [4, 4, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-155", "rowNumber": 155, "className": "MI25A-BOL2", "subject": "WD_BOL2_PRK2", "teachers": ["JAHN", "KOAY", "ZAJO"], "teacherCount": 3, "totalHours": 450, "periodHours": [15, 15, 0, 15], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-156", "rowNumber": 156, "className": "MI25A-BOL2", "subject": "WD_BOL2_REK_1", "teachers": ["DOSU", "VAJY"], "teacherCount": 2, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-157", "rowNumber": 157, "className": "MI25A-BOL2", "subject": "WD_BOL2_ONTW", "teachers": ["PESM"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-158", "rowNumber": 158, "className": "MI25A-BOL2", "subject": "WD_BOL2_NED_1", "teachers": ["DOSU", "VAJY"], "teacherCount": 2, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-159", "rowNumber": 159, "className": "MI25A-BOL2", "subject": "WD_BOL2_LB_1", "teachers": ["JAHN"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-160", "rowNumber": 160, "className": "MI25A-BOL2", "subject": "WD_BOL2_CNC_PRK", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-161", "rowNumber": 161, "className": "MI25A-BOL2", "subject": "WD_BOL2_BURG", "teachers": ["VAJY"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-162", "rowNumber": 162, "className": "MI25A-BOL2", "subject": "WD_BOL2_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 40, 0], "activePeriodIds": ["period-3"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-163", "rowNumber": 163, "className": "MI25A-BOL2", "subject": "WD_BOL2_AUTOCAD", "teachers": ["DOSU", "JADF"], "teacherCount": 2, "totalHours": 30, "periodHours": [1.5, 1.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-164", "rowNumber": 164, "className": "MI25A-BOL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-165", "rowNumber": 165, "className": "MI25A-BOL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-170", "rowNumber": 170, "className": "MI25A-BOL3", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 80, "periodHours": [4, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-171", "rowNumber": 171, "className": "MI25A-BOL3", "subject": "WD_BOL4_PRK_2", "teachers": ["DKJE", "GORN"], "teacherCount": 2, "totalHours": 360, "periodHours": [12, 12, 0, 12], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-172", "rowNumber": 172, "className": "MI25A-BOL3", "subject": "WD_BOL4_CNC_1", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 45, "periodHours": [1.5, 1.5, 0, 1.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-173", "rowNumber": 173, "className": "MI25A-BOL3", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 40, 0], "activePeriodIds": ["period-3"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-174", "rowNumber": 174, "className": "MI25A-BOL3", "subject": "WD_BOL4_CNC_PRK", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 45, "periodHours": [1.5, 1.5, 0, 1.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-175", "rowNumber": 175, "className": "MI25A-BOL3", "subject": "WD_BOL4_RUIM_CON", "teachers": ["BICR"], "teacherCount": 1, "totalHours": 40, "periodHours": [0, 2, 0, 2], "activePeriodIds": ["period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-176", "rowNumber": 176, "className": "MI25A-BOL3", "subject": "WD_BOL4_PALET_CAD_1", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 30, "periodHours": [0, 1.5, 0, 1.5], "activePeriodIds": ["period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-177", "rowNumber": 177, "className": "MI25A-BOL3", "subject": "WD_BOL4_AUTO_1", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 15, "periodHours": [1.5, 0, 0, 0], "activePeriodIds": ["period-1"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-178", "rowNumber": 178, "className": "MI25A-BOL3", "subject": "WD_BOL4_LB", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-179", "rowNumber": 179, "className": "MI25A-BOL3", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-180", "rowNumber": 180, "className": "MI25A-BOL3", "subject": "WD_BOL4_ONT_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-181", "rowNumber": 181, "className": "MI25A-BOL3", "subject": "WD_BOL4_NED_3F", "teachers": ["VAJY"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-182", "rowNumber": 182, "className": "MI25A-BOL3", "subject": "WD_BOL4_REK_3F", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-183", "rowNumber": 183, "className": "MI25A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-184", "rowNumber": 184, "className": "MI25A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-189", "rowNumber": 189, "className": "MI25A-BOL4", "subject": "WD_BOL4_WERKVOOR", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 91, "periodHours": [3.5, 3.5, 0, 3.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-190", "rowNumber": 190, "className": "MI25A-BOL4", "subject": "WD_BOL4_PRK_2", "teachers": ["BICR", "DAPT", "SCST", "VRFA"], "teacherCount": 4, "totalHours": 273, "periodHours": [10.5, 10.5, 0, 10.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-191", "rowNumber": 191, "className": "MI25A-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["BICR", "TAGI"], "teacherCount": 2, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-192", "rowNumber": 192, "className": "MI25A-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 560, "periodHours": [0, 0, 40, 0], "activePeriodIds": ["period-3"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-193", "rowNumber": 193, "className": "MI25A-BOL4", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-194", "rowNumber": 194, "className": "MI25A-BOL4", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-195", "rowNumber": 195, "className": "MI25A-BOL4", "subject": "WD_BOL4_ENG_A2_B1", "teachers": ["ASYA"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-196", "rowNumber": 196, "className": "MI25A-BOL4", "subject": "WD_BOL4_LB", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-197", "rowNumber": 197, "className": "MI25A-BOL4", "subject": "WD_BOL4_BEDR", "teachers": ["CLJH"], "teacherCount": 1, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-198", "rowNumber": 198, "className": "MI25A-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["KOAY", "KUHU"], "teacherCount": 2, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-199", "rowNumber": 199, "className": "MI25A-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["DAPT"], "teacherCount": 1, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-200", "rowNumber": 200, "className": "MI25A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-201", "rowNumber": 201, "className": "MI25A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-206", "rowNumber": 206, "className": "MI25B-BOL4", "subject": "WD_BOL4_WERKVOOR", "teachers": ["DAPT", "TAGI"], "teacherCount": 2, "totalHours": 91, "periodHours": [3.5, 3.5, 0, 3.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-207", "rowNumber": 207, "className": "MI25B-BOL4", "subject": "WD_BOL4_PRK_2", "teachers": ["DAPT", "KUHU", "VRFA", "ZAJO"], "teacherCount": 4, "totalHours": 273, "periodHours": [10.5, 10.5, 0, 10.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-208", "rowNumber": 208, "className": "MI25B-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["DAPT"], "teacherCount": 1, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-209", "rowNumber": 209, "className": "MI25B-BOL4", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-210", "rowNumber": 210, "className": "MI25B-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-211", "rowNumber": 211, "className": "MI25B-BOL4", "subject": "WD_BOL4_LB", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-212", "rowNumber": 212, "className": "MI25B-BOL4", "subject": "WD_BOL4_ENG_A2_B1", "teachers": ["ASYA"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-213", "rowNumber": 213, "className": "MI25B-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["KOAY", "KUHU"], "teacherCount": 2, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-214", "rowNumber": 214, "className": "MI25B-BOL4", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 26, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-215", "rowNumber": 215, "className": "MI25B-BOL4", "subject": "WD_BOL4_BEDR", "teachers": ["CLJH"], "teacherCount": 1, "totalHours": 52, "periodHours": [2, 2, 0, 2], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-216", "rowNumber": 216, "className": "MI25B-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 560, "periodHours": [0, 0, 40, 0], "activePeriodIds": ["period-3"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-217", "rowNumber": 217, "className": "MI25B-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-218", "rowNumber": 218, "className": "MI25B-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-223", "rowNumber": 223, "className": "MI25HT-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-224", "rowNumber": 224, "className": "MI25HT-BBL2", "subject": "WD_BBL_HOUT_TECH", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 60, "periodHours": [2, 2, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-225", "rowNumber": 225, "className": "MI25HT-BBL2", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-226", "rowNumber": 226, "className": "MI25HT-BBL2", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-227", "rowNumber": 227, "className": "MI25HT-BBL2", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-228", "rowNumber": 228, "className": "MI25HT-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-229", "rowNumber": 229, "className": "MI25HT-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-230", "rowNumber": 230, "className": "MI25HT-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-235", "rowNumber": 235, "className": "MI25HT-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-236", "rowNumber": 236, "className": "MI25HT-BBL3", "subject": "WD_BBL_HOUT_TECH", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 60, "periodHours": [2, 2, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-237", "rowNumber": 237, "className": "MI25HT-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-238", "rowNumber": 238, "className": "MI25HT-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-239", "rowNumber": 239, "className": "MI25HT-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-240", "rowNumber": 240, "className": "MI25HT-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-241", "rowNumber": 241, "className": "MI25HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-242", "rowNumber": 242, "className": "MI25HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-247", "rowNumber": 247, "className": "MI25KM-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-248", "rowNumber": 248, "className": "MI25KM-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-249", "rowNumber": 249, "className": "MI25KM-BBL2", "subject": "WD_BBL_KEUKEN_TECH", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-250", "rowNumber": 250, "className": "MI25KM-BBL2", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-251", "rowNumber": 251, "className": "MI25KM-BBL2", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-252", "rowNumber": 252, "className": "MI25KM-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-253", "rowNumber": 253, "className": "MI25KM-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-258", "rowNumber": 258, "className": "MI25KM-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-259", "rowNumber": 259, "className": "MI25KM-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-260", "rowNumber": 260, "className": "MI25KM-BBL3", "subject": "WD_BBL_KEUKEN_TECH", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-261", "rowNumber": 261, "className": "MI25KM-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-262", "rowNumber": 262, "className": "MI25KM-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-263", "rowNumber": 263, "className": "MI25KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-264", "rowNumber": 264, "className": "MI25KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-269", "rowNumber": 269, "className": "MI25N-BBL2", "subject": "WD_MIBBL_VKL_1", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-270", "rowNumber": 270, "className": "MI25N-BBL2", "subject": "WD_MIBBL_KEUZE", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-271", "rowNumber": 271, "className": "MI25N-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-272", "rowNumber": 272, "className": "MI25N-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-273", "rowNumber": 273, "className": "MI25N-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-278", "rowNumber": 278, "className": "MI25N-BBL3", "subject": "WD_MIBBL_VKL_1", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-279", "rowNumber": 279, "className": "MI25N-BBL3", "subject": "WD_MIBBL_KEUZE", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-280", "rowNumber": 280, "className": "MI25N-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-281", "rowNumber": 281, "className": "MI25N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-282", "rowNumber": 282, "className": "MI25N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-287", "rowNumber": 287, "className": "MI25V-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-288", "rowNumber": 288, "className": "MI25V-BBL2", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-289", "rowNumber": 289, "className": "MI25V-BBL2", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-290", "rowNumber": 290, "className": "MI25V-BBL2", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-291", "rowNumber": 291, "className": "MI25V-BBL2", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-292", "rowNumber": 292, "className": "MI25V-BBL2", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-293", "rowNumber": 293, "className": "MI25V-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-294", "rowNumber": 294, "className": "MI25V-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-299", "rowNumber": 299, "className": "MI25V-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-300", "rowNumber": 300, "className": "MI25V-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-301", "rowNumber": 301, "className": "MI25V-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-302", "rowNumber": 302, "className": "MI25V-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-303", "rowNumber": 303, "className": "MI25V-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-304", "rowNumber": 304, "className": "MI25V-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-305", "rowNumber": 305, "className": "MI25V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-306", "rowNumber": 306, "className": "MI25V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-311", "rowNumber": 311, "className": "MI26A-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-312", "rowNumber": 312, "className": "MI26A-BBL2", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-313", "rowNumber": 313, "className": "MI26A-BBL2", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 80, "periodHours": [2, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-314", "rowNumber": 314, "className": "MI26A-BBL2", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["JADF", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-315", "rowNumber": 315, "className": "MI26A-BBL2", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["BICR", "DOSU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-316", "rowNumber": 316, "className": "MI26A-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-317", "rowNumber": 317, "className": "MI26A-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-322", "rowNumber": 322, "className": "MI26A-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-323", "rowNumber": 323, "className": "MI26A-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 60, "periodHours": [1.5, 1.5, 1.5, 1.5], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-324", "rowNumber": 324, "className": "MI26A-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 80, "periodHours": [2, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-325", "rowNumber": 325, "className": "MI26A-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["JADF", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-326", "rowNumber": 326, "className": "MI26A-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["BICR", "DOSU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-327", "rowNumber": 327, "className": "MI26A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-328", "rowNumber": 328, "className": "MI26A-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-333", "rowNumber": 333, "className": "MI26A-BBL4", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-334", "rowNumber": 334, "className": "MI26A-BBL4", "subject": "WD_BBL_VAK_GEV", "teachers": ["DANL", "RORN"], "teacherCount": 2, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-335", "rowNumber": 335, "className": "MI26A-BBL4", "subject": "WD_BBL_BEDR", "teachers": ["GUEV"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-336", "rowNumber": 336, "className": "MI26A-BBL4", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-337", "rowNumber": 337, "className": "MI26A-BBL4", "subject": "WD_BBL_ENG_A2_B1", "teachers": ["ASYA"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-338", "rowNumber": 338, "className": "MI26A-BBL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-339", "rowNumber": 339, "className": "MI26A-BBL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-344", "rowNumber": 344, "className": "MI26A-BOL2", "subject": "WD_BOL2_VKL_1", "teachers": ["DOSU", "JAHN", "KOAY"], "teacherCount": 3, "totalHours": 120, "periodHours": [4, 4, 0, 4], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-345", "rowNumber": 345, "className": "MI26A-BOL2", "subject": "WD_BOL2_REK_1", "teachers": ["DOSU", "VAJY"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-346", "rowNumber": 346, "className": "MI26A-BOL2", "subject": "WD_BOL2_PRK2", "teachers": ["JAHN", "KOAY", "ZAJO"], "teacherCount": 3, "totalHours": 450, "periodHours": [15, 15, 0, 15], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-347", "rowNumber": 347, "className": "MI26A-BOL2", "subject": "WD_BOL2_AUTOCAD", "teachers": ["DOSU", "JADF"], "teacherCount": 2, "totalHours": 45, "periodHours": [1.5, 1.5, 0, 1.5], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-348", "rowNumber": 348, "className": "MI26A-BOL2", "subject": "WD_BOL2_BURG", "teachers": ["VAJY"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-349", "rowNumber": 349, "className": "MI26A-BOL2", "subject": "WD_BOL2_ONTW", "teachers": ["PESM"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-350", "rowNumber": 350, "className": "MI26A-BOL2", "subject": "WD_BOL2_NED_1", "teachers": ["DOSU", "VAJY"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-351", "rowNumber": 351, "className": "MI26A-BOL2", "subject": "WD_BOL2_LB_PRK_1", "teachers": ["KOAY"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-352", "rowNumber": 352, "className": "MI26A-BOL2", "subject": "WD_BOL2_LB_2", "teachers": ["JAHN", "KOAY"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-353", "rowNumber": 353, "className": "MI26A-BOL2", "subject": "WD_BOL2_DIG_VAAR", "teachers": ["GINE", "JADF"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 0, 1], "activePeriodIds": ["period-1", "period-2", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-354", "rowNumber": 354, "className": "MI26A-BOL2", "subject": "WD_BOL2_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 40, 0], "activePeriodIds": ["period-3"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-355", "rowNumber": 355, "className": "MI26A-BOL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-356", "rowNumber": 356, "className": "MI26A-BOL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-361", "rowNumber": 361, "className": "MI26A-BOL3", "subject": "WD_BOL4_MEUBEL_INTER_WORK_2", "teachers": ["GINE", "RORN"], "teacherCount": 2, "totalHours": 105, "periodHours": [3.5, 3.5, 3.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-362", "rowNumber": 362, "className": "MI26A-BOL3", "subject": "WD_BOL4_PRK_2", "teachers": ["GINE", "GORN", "SCST", "ZAJO"], "teacherCount": 4, "totalHours": 315, "periodHours": [10.5, 10.5, 10.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-363", "rowNumber": 363, "className": "MI26A-BOL3", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["GINE"], "teacherCount": 1, "totalHours": 100, "periodHours": [4, 4, 2, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-364", "rowNumber": 364, "className": "MI26A-BOL3", "subject": "WD_BOL4_AUTO_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-365", "rowNumber": 365, "className": "MI26A-BOL3", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 0, 40], "activePeriodIds": ["period-4"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-366", "rowNumber": 366, "className": "MI26A-BOL3", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-367", "rowNumber": 367, "className": "MI26A-BOL3", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-368", "rowNumber": 368, "className": "MI26A-BOL3", "subject": "WD_BOL4_REK_3F", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-369", "rowNumber": 369, "className": "MI26A-BOL3", "subject": "WD_BOL4_LB", "teachers": ["GINE", "VEGS"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-370", "rowNumber": 370, "className": "MI26A-BOL3", "subject": "WD_BOL4_MACH_KEN_VEIL", "teachers": ["GORN"], "teacherCount": 1, "totalHours": 70, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-371", "rowNumber": 371, "className": "MI26A-BOL3", "subject": "WD_BOL4_ONT_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-372", "rowNumber": 372, "className": "MI26A-BOL3", "subject": "WD_BOL4_CNC_2", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-373", "rowNumber": 373, "className": "MI26A-BOL3", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-374", "rowNumber": 374, "className": "MI26A-BOL3", "subject": "WD_BOL4_DIG_VAAR", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-375", "rowNumber": 375, "className": "MI26A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-376", "rowNumber": 376, "className": "MI26A-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-381", "rowNumber": 381, "className": "MI26A-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_WORK_2", "teachers": ["GINE", "RORN"], "teacherCount": 2, "totalHours": 105, "periodHours": [3.5, 3.5, 3.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-382", "rowNumber": 382, "className": "MI26A-BOL4", "subject": "WD_BOL4_PRK_2", "teachers": ["GINE", "GORN", "SCST", "ZAJO"], "teacherCount": 4, "totalHours": 315, "periodHours": [10.5, 10.5, 10.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-383", "rowNumber": 383, "className": "MI26A-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["GINE"], "teacherCount": 1, "totalHours": 100, "periodHours": [4, 4, 2, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-384", "rowNumber": 384, "className": "MI26A-BOL4", "subject": "WD_BOL4_AUTO_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-385", "rowNumber": 385, "className": "MI26A-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 0, 40], "activePeriodIds": ["period-4"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-386", "rowNumber": 386, "className": "MI26A-BOL4", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-387", "rowNumber": 387, "className": "MI26A-BOL4", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-388", "rowNumber": 388, "className": "MI26A-BOL4", "subject": "WD_BOL4_ENG_A2_B1", "teachers": ["ASYA"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-389", "rowNumber": 389, "className": "MI26A-BOL4", "subject": "WD_BOL4_REK_3F", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-390", "rowNumber": 390, "className": "MI26A-BOL4", "subject": "WD_BOL4_LB", "teachers": ["GINE", "VEGS"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-391", "rowNumber": 391, "className": "MI26A-BOL4", "subject": "WD_BOL4_MACH_KEN_VEIL", "teachers": ["GORN"], "teacherCount": 1, "totalHours": 70, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-392", "rowNumber": 392, "className": "MI26A-BOL4", "subject": "WD_BOL4_ONT_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-393", "rowNumber": 393, "className": "MI26A-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-394", "rowNumber": 394, "className": "MI26A-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-395", "rowNumber": 395, "className": "MI26A-BOL4", "subject": "WD_BOL4_DIG_VAAR", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-396", "rowNumber": 396, "className": "MI26A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-397", "rowNumber": 397, "className": "MI26A-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-402", "rowNumber": 402, "className": "MI26B-BOL3", "subject": "WD_BOL4_MEUBEL_INTER_WORK_2", "teachers": ["GINE", "RORN"], "teacherCount": 2, "totalHours": 105, "periodHours": [3.5, 3.5, 3.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-403", "rowNumber": 403, "className": "MI26B-BOL3", "subject": "WD_BOL4_REK_3F", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-404", "rowNumber": 404, "className": "MI26B-BOL3", "subject": "WD_BOL4_PRK_2", "teachers": ["GORN", "JAHN", "PESM", "RORN", "SCST"], "teacherCount": 5, "totalHours": 315, "periodHours": [10.5, 10.5, 10.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-405", "rowNumber": 405, "className": "MI26B-BOL3", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-406", "rowNumber": 406, "className": "MI26B-BOL3", "subject": "WD_BOL4_ONT_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-407", "rowNumber": 407, "className": "MI26B-BOL3", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-408", "rowNumber": 408, "className": "MI26B-BOL3", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["GINE"], "teacherCount": 1, "totalHours": 100, "periodHours": [4, 4, 2, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-409", "rowNumber": 409, "className": "MI26B-BOL3", "subject": "WD_BOL4_MACH_KEN_VEIL", "teachers": ["GORN"], "teacherCount": 1, "totalHours": 70, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-410", "rowNumber": 410, "className": "MI26B-BOL3", "subject": "WD_BOL4_LB", "teachers": ["PESM", "RORN"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-411", "rowNumber": 411, "className": "MI26B-BOL3", "subject": "WD_BOL4_DIG_VAAR", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-412", "rowNumber": 412, "className": "MI26B-BOL3", "subject": "WD_BOL4_CNC_2", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-413", "rowNumber": 413, "className": "MI26B-BOL3", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-414", "rowNumber": 414, "className": "MI26B-BOL3", "subject": "WD_BOL4_AUTO_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-415", "rowNumber": 415, "className": "MI26B-BOL3", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 0, 40], "activePeriodIds": ["period-4"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-416", "rowNumber": 416, "className": "MI26B-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-417", "rowNumber": 417, "className": "MI26B-BOL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-422", "rowNumber": 422, "className": "MI26B-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_WORK_2", "teachers": ["GINE", "RORN"], "teacherCount": 2, "totalHours": 105, "periodHours": [3.5, 3.5, 3.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-423", "rowNumber": 423, "className": "MI26B-BOL4", "subject": "WD_BOL4_REK_3F", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-424", "rowNumber": 424, "className": "MI26B-BOL4", "subject": "WD_BOL4_PRK_2", "teachers": ["GORN", "JAHN", "PESM", "RORN", "SCST"], "teacherCount": 5, "totalHours": 315, "periodHours": [10.5, 10.5, 10.5, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-425", "rowNumber": 425, "className": "MI26B-BOL4", "subject": "WD_BOL4_PALET_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-426", "rowNumber": 426, "className": "MI26B-BOL4", "subject": "WD_BOL4_ONT_1", "teachers": ["TAGI"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-427", "rowNumber": 427, "className": "MI26B-BOL4", "subject": "WD_BOL4_NED_3F", "teachers": ["KIHN"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-428", "rowNumber": 428, "className": "MI26B-BOL4", "subject": "WD_BOL4_MEUBEL_INTER_1_1", "teachers": ["GINE"], "teacherCount": 1, "totalHours": 100, "periodHours": [4, 4, 2, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-429", "rowNumber": 429, "className": "MI26B-BOL4", "subject": "WD_BOL4_MACH_KEN_VEIL", "teachers": ["GORN"], "teacherCount": 1, "totalHours": 70, "periodHours": [3.5, 3.5, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-430", "rowNumber": 430, "className": "MI26B-BOL4", "subject": "WD_BOL4_LB", "teachers": ["PESM", "RORN"], "teacherCount": 2, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-431", "rowNumber": 431, "className": "MI26B-BOL4", "subject": "WD_BOL4_ENG_A2_B1", "teachers": ["ASYA"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-432", "rowNumber": 432, "className": "MI26B-BOL4", "subject": "WD_BOL4_DIG_VAAR", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-433", "rowNumber": 433, "className": "MI26B-BOL4", "subject": "WD_BOL4_CNC_2", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 2, 0], "activePeriodIds": ["period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-434", "rowNumber": 434, "className": "MI26B-BOL4", "subject": "WD_BOL4_BURG_DEEL1", "teachers": ["VEGS"], "teacherCount": 1, "totalHours": 30, "periodHours": [1, 1, 1, 0], "activePeriodIds": ["period-1", "period-2", "period-3"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-435", "rowNumber": 435, "className": "MI26B-BOL4", "subject": "WD_BOL4_AUTO_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [2, 2, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-436", "rowNumber": 436, "className": "MI26B-BOL4", "subject": "WD_BOL4_BPV", "teachers": [], "teacherCount": 0, "totalHours": 400, "periodHours": [0, 0, 0, 40], "activePeriodIds": ["period-4"], "isBpv": true, "isUitval": false, "hasTeacher": false}, {"id": "r-437", "rowNumber": 437, "className": "MI26B-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-438", "rowNumber": 438, "className": "MI26B-BOL4", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-443", "rowNumber": 443, "className": "MI26HT-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-444", "rowNumber": 444, "className": "MI26HT-BBL2", "subject": "WD_BBL_HOUT_TECH", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 60, "periodHours": [2, 2, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-445", "rowNumber": 445, "className": "MI26HT-BBL2", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-446", "rowNumber": 446, "className": "MI26HT-BBL2", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-447", "rowNumber": 447, "className": "MI26HT-BBL2", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-448", "rowNumber": 448, "className": "MI26HT-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-449", "rowNumber": 449, "className": "MI26HT-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-450", "rowNumber": 450, "className": "MI26HT-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-455", "rowNumber": 455, "className": "MI26HT-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-456", "rowNumber": 456, "className": "MI26HT-BBL3", "subject": "WD_BBL_HOUT_TECH", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 60, "periodHours": [2, 2, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-457", "rowNumber": 457, "className": "MI26HT-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-458", "rowNumber": 458, "className": "MI26HT-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-459", "rowNumber": 459, "className": "MI26HT-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-460", "rowNumber": 460, "className": "MI26HT-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["DKJE"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-461", "rowNumber": 461, "className": "MI26HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-462", "rowNumber": 462, "className": "MI26HT-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-467", "rowNumber": 467, "className": "MI26KM-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-468", "rowNumber": 468, "className": "MI26KM-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-469", "rowNumber": 469, "className": "MI26KM-BBL2", "subject": "WD_BBL_KEUKEN_TECH", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-470", "rowNumber": 470, "className": "MI26KM-BBL2", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-471", "rowNumber": 471, "className": "MI26KM-BBL2", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-472", "rowNumber": 472, "className": "MI26KM-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-473", "rowNumber": 473, "className": "MI26KM-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-478", "rowNumber": 478, "className": "MI26KM-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-479", "rowNumber": 479, "className": "MI26KM-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-480", "rowNumber": 480, "className": "MI26KM-BBL3", "subject": "WD_BBL_KEUKEN_TECH", "teachers": ["RORN"], "teacherCount": 1, "totalHours": 120, "periodHours": [3, 3, 3, 3], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-481", "rowNumber": 481, "className": "MI26KM-BBL3", "subject": "WD_BBL_DIG_VAAR_BAS_2", "teachers": ["DOSU"], "teacherCount": 1, "totalHours": 20, "periodHours": [1, 1, 0, 0], "activePeriodIds": ["period-1", "period-2"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-482", "rowNumber": 482, "className": "MI26KM-BBL3", "subject": "WD_BBL_AUTO_CAD_2", "teachers": ["JADF"], "teacherCount": 1, "totalHours": 20, "periodHours": [0, 0, 1, 1], "activePeriodIds": ["period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-483", "rowNumber": 483, "className": "MI26KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-484", "rowNumber": 484, "className": "MI26KM-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-489", "rowNumber": 489, "className": "MI26N-BBL2", "subject": "WD_MIBBL_VKL_1", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 90, "periodHours": [3, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-490", "rowNumber": 490, "className": "MI26N-BBL2", "subject": "WD_MIBBL_KEUZE", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 50, "periodHours": [2, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-491", "rowNumber": 491, "className": "MI26N-BBL2", "subject": "WD_BBL_LB_BURG", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-492", "rowNumber": 492, "className": "MI26N-BBL2", "subject": "WD_BBL_NED_REK_1", "teachers": ["SWES", "VEGS"], "teacherCount": 2, "totalHours": 60, "periodHours": [0, 2, 2, 2], "activePeriodIds": ["period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-493", "rowNumber": 493, "className": "MI26N-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-494", "rowNumber": 494, "className": "MI26N-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-499", "rowNumber": 499, "className": "MI26N-BBL3", "subject": "WD_MIBBL_VKL_1", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 90, "periodHours": [3, 2, 2, 2], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-500", "rowNumber": 500, "className": "MI26N-BBL3", "subject": "WD_MIBBL_KEUZE", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 50, "periodHours": [2, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-501", "rowNumber": 501, "className": "MI26N-BBL3", "subject": "WD_BBL_LB_BURG", "teachers": ["JOTH"], "teacherCount": 1, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-502", "rowNumber": 502, "className": "MI26N-BBL3", "subject": "WD_BBL_NED_REK_1", "teachers": ["SWES", "VEGS"], "teacherCount": 2, "totalHours": 60, "periodHours": [0, 2, 2, 2], "activePeriodIds": ["period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-503", "rowNumber": 503, "className": "MI26N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-504", "rowNumber": 504, "className": "MI26N-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-509", "rowNumber": 509, "className": "MI26V-BBL2", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-510", "rowNumber": 510, "className": "MI26V-BBL2", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-511", "rowNumber": 511, "className": "MI26V-BBL2", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-512", "rowNumber": 512, "className": "MI26V-BBL2", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-513", "rowNumber": 513, "className": "MI26V-BBL2", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-514", "rowNumber": 514, "className": "MI26V-BBL2", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-515", "rowNumber": 515, "className": "MI26V-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-516", "rowNumber": 516, "className": "MI26V-BBL2", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-521", "rowNumber": 521, "className": "MI26V-BBL3", "subject": "WD_BBL_BREN_2", "teachers": ["KIHN", "VEGS"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-522", "rowNumber": 522, "className": "MI26V-BBL3", "subject": "WD_BBL_LB_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-523", "rowNumber": 523, "className": "MI26V-BBL3", "subject": "WD_BBL_AUTO_CAD_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-524", "rowNumber": 524, "className": "MI26V-BBL3", "subject": "WD_BBL_CNC_PROG_BAS_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-525", "rowNumber": 525, "className": "MI26V-BBL3", "subject": "WD_MIBBL_VKL_2", "teachers": ["BICR", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-526", "rowNumber": 526, "className": "MI26V-BBL3", "subject": "WD_MIBBL_DIG_VAAR_3", "teachers": ["DOSU", "KUHU"], "teacherCount": 2, "totalHours": 40, "periodHours": [1, 1, 1, 1], "activePeriodIds": ["period-1", "period-2", "period-3", "period-4"], "isBpv": false, "isUitval": false, "hasTeacher": true}, {"id": "r-527", "rowNumber": 527, "className": "MI26V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}, {"id": "r-528", "rowNumber": 528, "className": "MI26V-BBL3", "subject": "geplande uitval", "teachers": [], "teacherCount": 0, "totalHours": 0, "periodHours": [0, 0, 0, 0], "activePeriodIds": [], "isBpv": false, "isUitval": true, "hasTeacher": false}], "notes": {"hoursMode": {"linked": "Telt alle uren van een regel volledig mee bij elke docent op die regel.", "distributed": "Verdeelt de uren van een regel gelijk over de genoemde docenten."}}};
+    const state = {
+      search: "",
+      classFilter: "all",
+      teacherFilter: "all",
+      subjectFilter: "",
+      periodFilter: "all",
+      hoursMode: "linked",
+      includeUnassigned: true,
+      openFirstCard: false,
+      activeView: "classes",
+    };
+
+    const elements = {
+      search: document.getElementById("search"),
+      classFilter: document.getElementById("class-filter"),
+      teacherFilter: document.getElementById("teacher-filter"),
+      subjectFilter: document.getElementById("subject-filter"),
+      includeUnassigned: document.getElementById("include-unassigned"),
+      openFirstCard: document.getElementById("open-first-card"),
+      hoursMode: document.getElementById("hours-mode"),
+      periodFilter: document.getElementById("period-filter"),
+      kpis: document.getElementById("kpi-grid"),
+      periodGrid: document.getElementById("period-grid"),
+      filterSummary: document.getElementById("filter-summary"),
+      classesView: document.getElementById("view-classes"),
+      teachersView: document.getElementById("view-teachers"),
+      matrixView: document.getElementById("view-matrix"),
+      recordsView: document.getElementById("view-records"),
+      tabbar: document.getElementById("tabbar"),
+      sourcePill: document.getElementById("source-pill"),
+      integrityPill: document.getElementById("integrity-pill"),
+    };
+
+    const hoursModeLabel = {
+      linked: "Gezamenlijk",
+      distributed: "Gelijk verdeeld",
+    };
+
+    function formatHours(value) {
+      return new Intl.NumberFormat("nl-NL", {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+        maximumFractionDigits: 1,
+      }).format(value);
+    }
+
+    function formatCount(value) {
+      return new Intl.NumberFormat("nl-NL").format(value);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function normalize(value) {
+      return String(value || "").toLowerCase();
+    }
+
+    function sum(values) {
+      return values.reduce((total, value) => total + value, 0);
+    }
+
+    function getTeacherLabel(code) {
+      if (code === "__UNASSIGNED__") return "Nog niet toegewezen";
+      return code;
+    }
+
+    function periodIndexById(periodId) {
+      return DATA.periods.findIndex((period) => period.id === periodId);
+    }
+
+    function recordMatchesFilters(record) {
+      if (!state.includeUnassigned && record.teachers.length === 0) {
+        return false;
+      }
+
+      if (state.classFilter !== "all" && record.className !== state.classFilter) {
+        return false;
+      }
+
+      if (state.teacherFilter !== "all") {
+        if (state.teacherFilter === "__UNASSIGNED__") {
+          if (record.teachers.length > 0) return false;
+        } else if (!record.teachers.includes(state.teacherFilter)) {
+          return false;
+        }
+      }
+
+      if (state.subjectFilter) {
+        if (!normalize(record.subject).includes(normalize(state.subjectFilter))) {
+          return false;
+        }
+      }
+
+      if (state.periodFilter !== "all") {
+        const periodIndex = periodIndexById(state.periodFilter);
+        if (periodIndex < 0 || Number(record.periodHours[periodIndex]) <= 0) {
+          return false;
+        }
+      }
+
+      if (state.search) {
+        const haystack = [
+          record.className,
+          record.subject,
+          record.teachers.join(" "),
+          record.teachers.length === 0 ? "nog niet toegewezen" : "",
+        ].join(" ");
+        if (!normalize(haystack).includes(normalize(state.search))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function getFilteredRecords() {
+      return DATA.records.filter(recordMatchesFilters);
+    }
+
+    function buildClassSummaries(records) {
+      const map = new Map();
+
+      DATA.classes.forEach((classInfo) => {
+        map.set(classInfo.name, {
+          name: classInfo.name,
+          recordCount: 0,
+          totalHours: 0,
+          bpvHours: 0,
+          lessonHours: 0,
+          unassignedCount: 0,
+          periodHours: DATA.periods.map(() => 0),
+          teachers: new Set(),
+          records: [],
+          totals: classInfo.totals,
+        });
+      });
+
+      records.forEach((record) => {
+        const entry = map.get(record.className);
+        if (!entry) return;
+
+        entry.recordCount += 1;
+        entry.totalHours += Number(record.totalHours);
+        entry.records.push(record);
+        record.teachers.forEach((teacher) => entry.teachers.add(teacher));
+        if (record.teachers.length === 0) {
+          entry.unassignedCount += 1;
+        }
+        if (record.isBpv) {
+          entry.bpvHours += Number(record.totalHours);
+        } else {
+          entry.lessonHours += Number(record.totalHours);
+        }
+        record.periodHours.forEach((value, index) => {
+          entry.periodHours[index] += Number(value);
+        });
+      });
+
+      return Array.from(map.values())
+        .filter((entry) => entry.recordCount > 0)
+        .map((entry) => ({
+          ...entry,
+          teachers: Array.from(entry.teachers).sort(),
+        }))
+        .sort((a, b) => b.totalHours - a.totalHours || a.name.localeCompare(b.name));
+    }
+
+    function buildTeacherSummaries(records) {
+      const map = new Map();
+
+      DATA.teachers.forEach((teacher) => {
+        map.set(teacher.code, {
+          code: teacher.code,
+          label: teacher.code,
+          recordCount: 0,
+          linkedTotalHours: 0,
+          distributedTotalHours: 0,
+          linkedPeriodHours: DATA.periods.map(() => 0),
+          distributedPeriodHours: DATA.periods.map(() => 0),
+          classes: new Set(),
+          subjects: new Set(),
+          records: [],
+        });
+      });
+
+      map.set("__UNASSIGNED__", {
+        code: "__UNASSIGNED__",
+        label: "Nog niet toegewezen",
+        recordCount: 0,
+        linkedTotalHours: 0,
+        distributedTotalHours: 0,
+        linkedPeriodHours: DATA.periods.map(() => 0),
+        distributedPeriodHours: DATA.periods.map(() => 0),
+        classes: new Set(),
+        subjects: new Set(),
+        records: [],
+      });
+
+      records.forEach((record) => {
+        if (record.teachers.length === 0) {
+          const entry = map.get("__UNASSIGNED__");
+          entry.recordCount += 1;
+          entry.linkedTotalHours += Number(record.totalHours);
+          entry.distributedTotalHours += Number(record.totalHours);
+          entry.classes.add(record.className);
+          entry.subjects.add(record.subject);
+          entry.records.push({ record, share: 1 });
+          record.periodHours.forEach((value, index) => {
+            entry.linkedPeriodHours[index] += Number(value);
+            entry.distributedPeriodHours[index] += Number(value);
+          });
+          return;
+        }
+
+        const share = 1 / record.teachers.length;
+        record.teachers.forEach((teacherCode) => {
+          const entry = map.get(teacherCode);
+          if (!entry) return;
+          entry.recordCount += 1;
+          entry.linkedTotalHours += Number(record.totalHours);
+          entry.distributedTotalHours += Number(record.totalHours) * share;
+          entry.classes.add(record.className);
+          entry.subjects.add(record.subject);
+          entry.records.push({ record, share });
+          record.periodHours.forEach((value, index) => {
+            entry.linkedPeriodHours[index] += Number(value);
+            entry.distributedPeriodHours[index] += Number(value) * share;
+          });
+        });
+      });
+
+      return Array.from(map.values())
+        .filter((entry) => state.includeUnassigned || entry.code !== "__UNASSIGNED__")
+        .filter((entry) => entry.recordCount > 0)
+        .sort((a, b) => {
+          const bValue = state.hoursMode === "linked" ? b.linkedTotalHours : b.distributedTotalHours;
+          const aValue = state.hoursMode === "linked" ? a.linkedTotalHours : a.distributedTotalHours;
+          return bValue - aValue || a.label.localeCompare(b.label);
+        });
+    }
+
+    function buildMatrix(classSummaries, teacherSummaries) {
+      const teacherCodes = teacherSummaries.map((teacher) => teacher.code);
+      const grid = new Map();
+
+      getFilteredRecords().forEach((record) => {
+        if (record.teachers.length === 0) {
+          const key = `${record.className}__UNASSIGNED__`;
+          grid.set(key, (grid.get(key) || 0) + Number(record.totalHours));
+          return;
+        }
+
+        const share = 1 / record.teachers.length;
+        record.teachers.forEach((teacher) => {
+          const amount = state.hoursMode === "linked"
+            ? Number(record.totalHours)
+            : Number(record.totalHours) * share;
+          const key = `${record.className}__${teacher}`;
+          grid.set(key, (grid.get(key) || 0) + amount);
+        });
+      });
+
+      return {
+        teacherCodes,
+        rows: classSummaries.map((classSummary) => ({
+          className: classSummary.name,
+          values: teacherCodes.map((teacherCode) => grid.get(`${classSummary.name}__${teacherCode}`) || 0),
+        })),
+      };
+    }
+
+    function renderSourceInfo() {
+      elements.sourcePill.textContent = `Bron: ${DATA.meta.sourceFile} · ${DATA.meta.sourceSheet}`;
+      elements.integrityPill.textContent = DATA.meta.integrityMismatches === 0
+        ? "Controle: totaalregels sluiten aan"
+        : `Controle: ${DATA.meta.integrityMismatches} klasse(n) met afwijking`;
+    }
+
+    function renderSelectOptions() {
+      const subjects = Array.from(new Set(DATA.records.map((record) => record.subject))).sort((a, b) => a.localeCompare(b));
+
+      elements.search.innerHTML = [
+        '<option value="">Alles tonen</option>',
+        '<optgroup label="Klassen">',
+        ...DATA.classes.map((classInfo) => `<option value="${escapeHtml(classInfo.name)}">Klas: ${escapeHtml(classInfo.name)}</option>`),
+        '</optgroup>',
+        '<optgroup label="Docenten">',
+        ...DATA.teachers.map((teacher) => `<option value="${escapeHtml(teacher.code)}">Docent: ${escapeHtml(teacher.code)}</option>`),
+        '<option value="nog niet toegewezen">Docent: Nog niet toegewezen</option>',
+        '</optgroup>',
+        '<optgroup label="Vakken">',
+        ...subjects.map((subject) => `<option value="${escapeHtml(subject)}">Vak: ${escapeHtml(subject)}</option>`),
+        '</optgroup>',
+      ].join("");
+
+      elements.classFilter.innerHTML = [
+        '<option value="all">Alle klassen</option>',
+        ...DATA.classes.map((classInfo) => `<option value="${escapeHtml(classInfo.name)}">${escapeHtml(classInfo.name)}</option>`),
+      ].join("");
+
+      elements.teacherFilter.innerHTML = [
+        '<option value="all">Alle docenten</option>',
+        ...DATA.teachers.map((teacher) => `<option value="${escapeHtml(teacher.code)}">${escapeHtml(teacher.code)}</option>`),
+        '<option value="__UNASSIGNED__">Nog niet toegewezen</option>',
+      ].join("");
+
+      elements.subjectFilter.innerHTML = [
+        '<option value="">Alle vakken</option>',
+        ...subjects.map((subject) => `<option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>`),
+      ].join("");
+    }
+
+    function renderPeriodFilters() {
+      const buttons = [
+        '<button type="button" class="chip active" data-period="all">Alle periodes</button>',
+        ...DATA.periods.map((period) => `<button type="button" class="chip" data-period="${period.id}">${escapeHtml(period.label)}</button>`),
+      ];
+      elements.periodFilter.innerHTML = buttons.join("");
+    }
+
+    function renderKpis(records, classSummaries, teacherSummaries) {
+      const visibleHours = sum(records.map((record) => Number(record.totalHours)));
+      const visibleUnassigned = records.filter((record) => record.teachers.length === 0).length;
+      const visibleTeacherHours = sum(teacherSummaries.map((teacher) => (
+        state.hoursMode === "linked" ? teacher.linkedTotalHours : teacher.distributedTotalHours
+      )));
+
+      const kpis = [
+        {
+          title: "Zichtbare klassen",
+          value: formatCount(classSummaries.length),
+          text: "Aantal klassen in de huidige selectie.",
+        },
+        {
+          title: "Zichtbare docenten",
+          value: formatCount(teacherSummaries.filter((teacher) => teacher.code !== "__UNASSIGNED__").length),
+          text: "Docentcodes die in de selectie voorkomen.",
+        },
+        {
+          title: "Geplande uren",
+          value: formatHours(visibleHours),
+          text: "Som van de zichtbare vakregels voor klassen.",
+        },
+        {
+          title: "Docenturen",
+          value: formatHours(visibleTeacherHours),
+          text: `${hoursModeLabel[state.hoursMode]} uren in docentweergaven.`,
+        },
+        {
+          title: "Nog zonder docent",
+          value: formatCount(visibleUnassigned),
+          text: "Regels waar in het bronbestand geen docent is ingevuld.",
+        },
+      ];
+
+      elements.kpis.innerHTML = kpis.map((kpi) => `
+        <article class="kpi">
+          <h3>${escapeHtml(kpi.title)}</h3>
+          <strong>${escapeHtml(kpi.value)}</strong>
+          <p>${escapeHtml(kpi.text)}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderPeriodBoard(records) {
+      const totals = DATA.periods.map((period, index) => ({
+        ...period,
+        totalHours: sum(records.map((record) => Number(record.periodHours[index]))),
+      }));
+      const maxHours = Math.max(...totals.map((period) => period.totalHours), 0);
+
+      elements.periodGrid.innerHTML = totals.map((period) => `
+        <article class="mini-card">
+          <h3>${escapeHtml(period.label)}</h3>
+          <strong>${formatHours(period.totalHours)} uur</strong>
+          <p>${escapeHtml(period.week)} in de huidige selectie.</p>
+          <div class="progress"><span style="width: ${maxHours ? (period.totalHours / maxHours) * 100 : 0}%"></span></div>
+        </article>
+      `).join("");
+    }
+
+    function renderFilterSummary(records, classSummaries, teacherSummaries) {
+      const visibleTeacherCount = teacherSummaries.filter((teacher) => teacher.code !== "__UNASSIGNED__").length;
+      const badges = [
+        `Selectie: ${formatCount(records.length)} regels`,
+        `Klassen: ${formatCount(classSummaries.length)}`,
+        `Docenten: ${formatCount(visibleTeacherCount)}`,
+        `Urenmodus: ${hoursModeLabel[state.hoursMode]}`,
+      ];
+
+      elements.filterSummary.innerHTML = badges.map((badge) => `<div class="pill">${escapeHtml(badge)}</div>`).join("");
+    }
+
+    function renderClassesView(classSummaries) {
+      if (classSummaries.length === 0) {
+        elements.classesView.innerHTML = '<div class="empty-state"><strong>Geen klassen gevonden</strong><p>Probeer een filter te verruimen of zoek op een andere docent of klas.</p></div>';
+        return;
+      }
+
+      elements.classesView.innerHTML = `
+        <div class="note">
+          In deze weergave zie je per klas welke docenten gekoppeld zijn, hoeveel vakregels zichtbaar zijn en hoe de uren over de periodes verdeeld zijn.
+        </div>
+        <div class="view-grid" style="margin-top: 14px;">
+          ${classSummaries.map((classSummary, index) => renderClassCard(classSummary, index === 0 && state.openFirstCard)).join("")}
+        </div>
+      `;
+    }
+
+    function renderPeriodCollaboration(classSummary) {
+      const rows = DATA.periods.map((period, index) => {
+        const activeRecords = classSummary.records.filter((record) => Number(record.periodHours[index]) > 0);
+        const teachers = Array.from(new Set(activeRecords.flatMap((record) => record.teachers))).sort();
+        const teamRecords = activeRecords.filter((record) => record.teachers.length > 1);
+
+        return `
+          <tr>
+            <td>
+              <strong>${escapeHtml(period.label)}</strong>
+              <div class="muted">${escapeHtml(period.week)}</div>
+            </td>
+            <td>
+              <div class="chip-list">
+                ${teachers.length
+                  ? teachers.map((teacher) => `<span class="tag ok">${escapeHtml(teacher)}</span>`).join("")
+                  : '<span class="muted">Geen docent gekoppeld</span>'}
+              </div>
+            </td>
+            <td>
+              ${teamRecords.length
+                ? teamRecords.map((record) => `
+                    <div class="team-line">
+                      <strong>${escapeHtml(record.teachers.join(" + "))}</strong>
+                      <span>${escapeHtml(record.subject)} · ${formatHours(Number(record.periodHours[index]))} uur</span>
+                    </div>
+                  `).join("")
+                : '<span class="muted">Geen gezamenlijke vakregel</span>'}
+            </td>
+          </tr>
+        `;
+      });
+
+      return `
+        <section class="section-card">
+          <h4>Periodebezetting en samen lesgeven</h4>
+          <div class="table-wrap">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>Periode</th>
+                  <th>Docenten in deze periode</th>
+                  <th>Samen op dezelfde vakregel</th>
+                </tr>
+              </thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderClassCard(classSummary, open) {
+      const totalRow = classSummary.totals.grand;
+      const chips = classSummary.teachers.length > 0
+        ? classSummary.teachers.map((teacher) => `<span class="tag ok">${escapeHtml(teacher)}</span>`).join("")
+        : '<span class="tag alert">Geen docent ingevuld</span>';
+
+      const totalsTable = [
+        ["Zichtbare uren", formatHours(classSummary.totalHours)],
+        ["Klas totaal uit bron", totalRow ? formatHours(Number(totalRow.totalHours)) : "n.v.t."],
+        ["BPV", formatHours(classSummary.bpvHours)],
+        ["Les", formatHours(classSummary.lessonHours)],
+        ["Zonder docent", formatCount(classSummary.unassignedCount)],
+      ];
+
+      return `
+        <details class="card" ${open ? "open" : ""}>
+          <summary>
+            <div class="summary-top">
+              <div class="summary-title">
+                <strong>${escapeHtml(classSummary.name)}</strong>
+                <span>${formatCount(classSummary.recordCount)} regels · ${formatCount(classSummary.teachers.length)} docentcodes</span>
+              </div>
+              <div class="summary-metric">
+                <strong>${formatHours(classSummary.totalHours)}</strong>
+                <span class="summary-meta">zichtbare uren</span>
+              </div>
+            </div>
+          </summary>
+          <div class="summary-body">
+            <section class="section-card">
+              <h4>Docenten bij deze klas</h4>
+              <div class="chip-list">${chips}</div>
+            </section>
+            ${renderPeriodCollaboration(classSummary)}
+            <section class="section-card">
+              <h4>Kerncijfers</h4>
+              <div class="table-wrap">
+                <table class="compact-table">
+                  <tbody>
+                    ${totalsTable.map(([label, value]) => `
+                      <tr>
+                        <td>${escapeHtml(label)}</td>
+                        <td class="number">${escapeHtml(value)}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section class="section-card">
+              <h4>Vakregels</h4>
+              <div class="table-wrap">
+                <table class="records-table">
+                  <thead>
+                    <tr>
+                      <th>Vak</th>
+                      <th>Docenten</th>
+                      ${DATA.periods.map((period) => `<th class="number">${escapeHtml(period.week)}</th>`).join("")}
+                      <th class="number">Totaal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${classSummary.records.map((record) => `
+                      <tr>
+                        <td>${escapeHtml(record.subject)}</td>
+                        <td>${record.teachers.length ? escapeHtml(record.teachers.join(", ")) : '<span class="muted">Nog niet toegewezen</span>'}</td>
+                        ${record.periodHours.map((value) => `<td class="number">${value ? formatHours(Number(value)) : '<span class="muted">-</span>'}</td>`).join("")}
+                        <td class="number">${formatHours(Number(record.totalHours))}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </details>
+      `;
+    }
+
+    function renderTeachersView(teacherSummaries) {
+      if (teacherSummaries.length === 0) {
+        elements.teachersView.innerHTML = '<div class="empty-state"><strong>Geen docenten gevonden</strong><p>Er zijn geen docentregels zichtbaar met de huidige filters.</p></div>';
+        return;
+      }
+
+      elements.teachersView.innerHTML = `
+        <div class="note">
+          ${escapeHtml(DATA.notes.hoursMode[state.hoursMode])}
+        </div>
+        <div class="view-grid" style="margin-top: 14px;">
+          ${teacherSummaries.map((teacherSummary, index) => renderTeacherCard(teacherSummary, index === 0 && state.openFirstCard)).join("")}
+        </div>
+      `;
+    }
+
+    function renderTeacherCard(teacherSummary, open) {
+      const hourValue = state.hoursMode === "linked"
+        ? teacherSummary.linkedTotalHours
+        : teacherSummary.distributedTotalHours;
+      const periodHours = state.hoursMode === "linked"
+        ? teacherSummary.linkedPeriodHours
+        : teacherSummary.distributedPeriodHours;
+
+      return `
+        <details class="card" ${open ? "open" : ""}>
+          <summary>
+            <div class="summary-top">
+              <div class="summary-title">
+                <strong>${escapeHtml(teacherSummary.label)}</strong>
+                <span>${formatCount(teacherSummary.classes.size || teacherSummary.classes.length || 0)} klassen · ${formatCount(teacherSummary.subjects.size || teacherSummary.subjects.length || 0)} vakken</span>
+              </div>
+              <div class="summary-metric">
+                <strong>${formatHours(hourValue)}</strong>
+                <span class="summary-meta">${hoursModeLabel[state.hoursMode]} uren</span>
+              </div>
+            </div>
+          </summary>
+          <div class="summary-body">
+            <section class="section-card">
+              <h4>Klassen</h4>
+              <div class="chip-list">
+                ${Array.from(teacherSummary.classes).map((className) => `<span class="tag ok">${escapeHtml(className)}</span>`).join("")}
+              </div>
+            </section>
+            <section class="section-card">
+              <h4>Periodes</h4>
+              <div class="table-wrap">
+                <table class="compact-table">
+                  <tbody>
+                    ${DATA.periods.map((period, index) => `
+                      <tr>
+                        <td>${escapeHtml(period.label)} · ${escapeHtml(period.week)}</td>
+                        <td class="number">${formatHours(periodHours[index])}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section class="section-card">
+              <h4>Vakregels van deze docent</h4>
+              <div class="table-wrap">
+                <table class="records-table">
+                  <thead>
+                    <tr>
+                      <th>Klas</th>
+                      <th>Vak</th>
+                      <th>Alle docenten</th>
+                      <th class="number">Regeluren</th>
+                      <th class="number">${escapeHtml(hoursModeLabel[state.hoursMode])}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${teacherSummary.records.map(({ record, share }) => `
+                      <tr>
+                        <td>${escapeHtml(record.className)}</td>
+                        <td>${escapeHtml(record.subject)}</td>
+                        <td>${record.teachers.length ? escapeHtml(record.teachers.join(", ")) : '<span class="muted">Nog niet toegewezen</span>'}</td>
+                        <td class="number">${formatHours(Number(record.totalHours))}</td>
+                        <td class="number">${formatHours(state.hoursMode === "linked" ? Number(record.totalHours) : Number(record.totalHours) * share)}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </details>
+      `;
+    }
+
+    function renderMatrixView(classSummaries, teacherSummaries) {
+      if (classSummaries.length === 0 || teacherSummaries.length === 0) {
+        elements.matrixView.innerHTML = '<div class="empty-state"><strong>Geen matrix beschikbaar</strong><p>Je hebt minimaal één zichtbare klas en één zichtbare docent nodig.</p></div>';
+        return;
+      }
+
+      const matrix = buildMatrix(classSummaries, teacherSummaries);
+
+      elements.matrixView.innerHTML = `
+        <div class="note">
+          Deze matrix laat per klas zien hoeveel uren in de huidige selectie aan elke docent gekoppeld zijn.
+        </div>
+        <div class="table-wrap" style="margin-top: 14px;">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Klas</th>
+                ${matrix.teacherCodes.map((teacherCode) => `<th class="number">${escapeHtml(getTeacherLabel(teacherCode))}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${matrix.rows.map((row) => `
+                <tr>
+                  <td>${escapeHtml(row.className)}</td>
+                  ${row.values.map((value) => `<td class="number">${value ? formatHours(value) : '<span class="muted">-</span>'}</td>`).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderRecordsView(records) {
+      if (records.length === 0) {
+        elements.recordsView.innerHTML = '<div class="empty-state"><strong>Geen regels gevonden</strong><p>De huidige filters leveren geen zichtbare vakregels op.</p></div>';
+        return;
+      }
+
+      elements.recordsView.innerHTML = `
+        <div class="table-note">Ruwe, genormaliseerde regels uit het Excelbestand. Handig voor controle of overleg.</div>
+        <div class="table-wrap" style="margin-top: 14px;">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Klas</th>
+                <th>Vak</th>
+                <th>Docenten</th>
+                ${DATA.periods.map((period) => `<th class="number">${escapeHtml(period.week)}</th>`).join("")}
+                <th class="number">Totaal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${records.map((record) => `
+                <tr>
+                  <td>${escapeHtml(record.className)}</td>
+                  <td>${escapeHtml(record.subject)}</td>
+                  <td>${record.teachers.length ? escapeHtml(record.teachers.join(", ")) : '<span class="muted">Nog niet toegewezen</span>'}</td>
+                  ${record.periodHours.map((value) => `<td class="number">${value ? formatHours(Number(value)) : '<span class="muted">-</span>'}</td>`).join("")}
+                  <td class="number">${formatHours(Number(record.totalHours))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div class="footnote">
+          Let op: bij regels met meerdere docenten is de urentelling in het docentoverzicht afhankelijk van de gekozen urenmodus.
+        </div>
+      `;
+    }
+
+    function renderAll() {
+      const records = getFilteredRecords();
+      const classSummaries = buildClassSummaries(records);
+      const teacherSummaries = buildTeacherSummaries(records);
+
+      renderFilterSummary(records, classSummaries, teacherSummaries);
+      renderKpis(records, classSummaries, teacherSummaries);
+      renderPeriodBoard(records);
+      renderClassesView(classSummaries);
+      renderTeachersView(teacherSummaries);
+      renderMatrixView(classSummaries, teacherSummaries);
+      renderRecordsView(records);
+    }
+
+    function syncControls() {
+      elements.search.value = state.search;
+      elements.classFilter.value = state.classFilter;
+      elements.teacherFilter.value = state.teacherFilter;
+      elements.subjectFilter.value = state.subjectFilter;
+      elements.includeUnassigned.checked = state.includeUnassigned;
+      elements.openFirstCard.checked = state.openFirstCard;
+
+      elements.hoursMode.querySelectorAll('input[name="hours-mode"]').forEach((input) => {
+        input.checked = input.value === state.hoursMode;
+      });
+
+      elements.periodFilter.querySelectorAll(".chip").forEach((button) => {
+        button.classList.toggle("active", button.dataset.period === state.periodFilter);
+      });
+    }
+
+    function attachEvents() {
+      elements.search.addEventListener("change", (event) => {
+        state.search = event.target.value;
+        renderAll();
+      });
+
+      elements.classFilter.addEventListener("change", (event) => {
+        state.classFilter = event.target.value;
+        renderAll();
+      });
+
+      elements.teacherFilter.addEventListener("change", (event) => {
+        state.teacherFilter = event.target.value;
+        renderAll();
+      });
+
+      elements.subjectFilter.addEventListener("change", (event) => {
+        state.subjectFilter = event.target.value;
+        renderAll();
+      });
+
+      elements.includeUnassigned.addEventListener("change", (event) => {
+        state.includeUnassigned = event.target.checked;
+        renderAll();
+      });
+
+      elements.openFirstCard.addEventListener("change", (event) => {
+        state.openFirstCard = event.target.checked;
+        renderAll();
+      });
+
+      elements.hoursMode.addEventListener("change", (event) => {
+        if (event.target.name !== "hours-mode") return;
+        state.hoursMode = event.target.value;
+        renderAll();
+      });
+
+      elements.periodFilter.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-period]");
+        if (!target) return;
+        state.periodFilter = target.dataset.period;
+        syncControls();
+        renderAll();
+      });
+
+      elements.tabbar.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-view]");
+        if (!button) return;
+        state.activeView = button.dataset.view;
+        elements.tabbar.querySelectorAll("button").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.view === state.activeView);
+        });
+        document.querySelectorAll(".view").forEach((view) => {
+          view.classList.toggle("active", view.id === `view-${state.activeView}`);
+        });
+      });
+    }
+
+    function init() {
+      renderSourceInfo();
+      renderSelectOptions();
+      renderPeriodFilters();
+      syncControls();
+      attachEvents();
+      renderAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
